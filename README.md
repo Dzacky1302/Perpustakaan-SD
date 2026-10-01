@@ -84,7 +84,7 @@ Tombol yang nggak kepake disembunyiin di tampilan, tapi penjaganya beneran ada d
 | Routing JS | Ziggy | Nama route PHP tersedia di React, jadi tidak ada path yang salah ketik |
 | PDF | DomPDF | Slip dan laporan ber-kop sekolah dicetak langsung dari PHP |
 | Excel | OpenSpout | Impor data siswa dan ekspor laporan, ringan untuk skala sekolah |
-| Testing | PHPUnit 11 | 64 feature test menutup logika bisnis dan hak akses |
+| Testing | PHPUnit 11 | 73 feature test menutup logika bisnis dan hak akses |
 
 ---
 
@@ -154,6 +154,26 @@ Kalau registrasi dibuka ke internet, siapa aja bisa daftar lalu langsung dapat a
 Ini bug beneran. Logika "berapa hari telat" awalnya nyebar di **empat tempat**: service, model (`liveFine` dan `isOverdue`), sama controller. Akibatnya tiap layar bisa nampilin angka yang beda-beda — dan itu bukan risiko teori, emang kejadian.
 
 Sekarang semuanya lewat `FineService`. Tampilan, kuitansi, sama laporan dijamin konsisten karena sumbernya cuma satu.
+
+### 7. Pembatasan login dipakai berlapis
+
+Bawaan Laravel cuma memberi satu batas, dan kuncinya `email|ip`. Masalahnya: ganti email tiap percobaan, hitungannya selalu nol, batasnya tidak pernah tercapai.
+
+Jadi ditambah satu kunci khusus per IP. Hasilnya dua lapis yang saling menutup:
+
+| Lapis | Kunci | Menahan apa |
+|---|---|---|
+| `throttle` di route | per IP | Banjir request, sebelum password sempat dibandingkan |
+| `RateLimiter` per email+IP | satu akun | Tebak-tebakan password ke satu akun |
+| `RateLimiter` per IP | semua email | Penyerang yang ganti email tiap percobaan |
+
+Batasnya configurable lewat `.env`, dan ada test yang memastikan kunci per IP benar-benar bekerja — bukan cuma ada di kode.
+
+### 8. Angka tarif tidak pernah ditulis ulang di kode
+
+Dulu tarif denda ditulis di beberapa tempat sekaligus: fallback controller, teks komponen React, bahkan komentar. Waktu aturan diubah dari Rp1.000 ke Rp500, salinannya tertinggal dan dashboard bisa nampilin nominal berbeda dari laporan.
+
+Sekarang `FineService` satu-satunya pembaca konfigurasi denda. Ada test yang memindai sumber kode dan gagal kalau angka tarif muncul lagi di tempat lain.
 
 
 ## Instalasi
@@ -251,20 +271,20 @@ php artisan test --testdox                 # output lebih mudah dibaca
 php artisan test --filter Fine             # hanya test denda
 ```
 
-Status saat ini: **64 test, 151 assertion, semuanya lulus.**
+Status saat ini: **73 test, 224 assertion, semuanya lulus.**
 
 Cakupan test meliputi snapshot kelas saat siswa naik kelas, pembatasan role
 pustakawan dan kepala sekolah, perhitungan denda per hari sekolah (termasuk
-akhir pekan, libur nasional, dan cuti bersama), slip PDF, serta backup database
-termasuk rotasi dan penolakan path traversal.
+akhir pekan, libur nasional, dan cuti bersama), konsistensi tarif antar layar,
+pembatasan percobaan login, slip PDF, serta backup database termasuk rotasi dan
+penolakan path traversal.
 
 ## Keterbatasan
 
 Yang belum ada, aku tulis aja biar jelas:
 
 - **Belum ada REST API.** Semua masih server-rendered Inertia.
-- **Login belum dibatasi laju.** Di produksi, `/login` perlu `throttle`.
-- **Belum ada test frontend.** 64 test semuanya di sisi PHP, komponen React belum disentuh.
+- **Belum ada test frontend.** 73 test semuanya di sisi PHP, komponen React belum disentuh.
 - **Frontend masih JavaScript**, belum TypeScript.
 - **Belum ada halaman error** (404/500) dan belum ada error boundary di React.
 - **Backup cuma di storage lokal server.** Kalau perangkatnya rusak, filenya perlu disalin manual ke media lain.

@@ -166,6 +166,28 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Pembatasan percobaan login (rate limiting)
+    |--------------------------------------------------------------------------
+    | Dua lapis, sengaja dipisah:
+    |
+    |   login.max_attempts  — kunci per email+IP. Menghentikan tebak-tebakan
+    |                         password untuk satu akun tertentu.
+    |   login.max_attempts_per_ip — kunci per IP saja. Tanpa ini, penyerang
+    |                         bisa mengganti email tiap percobaan dan
+    |                         otomatis lolos dari batas per-akun.
+    |
+    | Nilai di sini adalah jaring pengaman kedua; throttle di level route
+    | (lihat routes/auth.php) yang menghentikan permintaan bahkan sebelum
+    | password sempat dibandingkan.
+    */
+    'login' => [
+        'max_attempts' => (int) env('PERPUS_LOGIN_MAX_ATTEMPTS', 5),
+        'decay_seconds' => (int) env('PERPUS_LOGIN_LOCKOUT_DETIK', 60),
+        'max_attempts_per_ip' => (int) env('PERPUS_LOGIN_MAX_PER_IP', 20),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Cadangan otomatis (backup) database SQLite
     |--------------------------------------------------------------------------
     | Dipakai oleh perintah `php artisan perpustakaan:backup`.
