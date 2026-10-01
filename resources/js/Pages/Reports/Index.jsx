@@ -113,8 +113,8 @@ export default function ReportsIndex({ filters = {}, classrooms = [], academicYe
                 </div>
                 <div className="rounded-2xl border border-slate-200 bg-white p-4">
                     <p className="text-[11px] font-bold uppercase text-slate-500">Tarif Denda</p>
-                    <p className="mt-1 text-xl font-extrabold text-slate-900">{fines.rate_label ?? 'Rp1.000'}</p>
-                    <p className="mt-1 text-[11px] text-slate-500">per hari</p>
+                    <p className="mt-1 text-xl font-extrabold text-slate-900">{fines.rate_label ?? 'Rp500'}</p>
+                    <p className="mt-1 text-[11px] text-slate-500">per hari sekolah</p>
                 </div>
                 <div className="rounded-2xl border border-slate-200 bg-white p-4">
                     <p className="text-[11px] font-bold uppercase text-slate-500">Batas per Buku</p>

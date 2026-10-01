@@ -11,10 +11,9 @@ use Illuminate\Support\Carbon;
 /**
  * Denda keterlambatan pengembalian buku koleksi.
  *
- * Aturan tetap (bisa diubah lewat .env, ada di config/perpustakaan.php):
- *   - Rp1.000 per hari keterlambatan
- *   - maksimal Rp10.000 per buku
- *   - siswa dengan denda belum bayar tidak boleh meminjaman lagi
+ * Seluruh angka & kalender diambil dari config/perpustakaan.php (key `fine`),
+ * yang bisa dioverride lewat .env. Tidak ada nilai nominal yang ditulis di sini
+ * supaya tidak melenceng saat aturan diubah.
  *
  * Nominal disimpan permanen di kolom fine_amount saat buku dikembalikan,
  * sehingga laporan tahun lalu tidak ikut berubah seiring waktu berjalan.

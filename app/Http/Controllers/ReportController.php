@@ -8,6 +8,7 @@ use App\Models\DailyLoan;
 use App\Models\LibraryVisit;
 use App\Models\PackageLoan;
 use App\Models\Student;
+use App\Services\FineService;
 use App\Services\SpreadsheetService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
@@ -17,8 +18,10 @@ use Inertia\Response;
 
 class ReportController extends Controller
 {
-    public function __construct(private readonly SpreadsheetService $spreadsheet)
-    {
+    public function __construct(
+        private readonly SpreadsheetService $spreadsheet,
+        private readonly FineService $fines,
+    ) {
     }
 
     /**
@@ -87,8 +90,8 @@ class ReportController extends Controller
             'collected' => $collected,
             'collected_label' => $money($collected),
             'count_unpaid' => DailyLoan::where('fine_amount', '>', 0)->whereNull('fine_paid_at')->count(),
-            'rate_label' => $money((int) config('perpustakaan.fine.daily_rate', 1000)),
-            'max_label' => $money((int) config('perpustakaan.fine.max_per_book', 10000)),
+            'rate_label' => $money($this->fines->dailyRate()),
+            'max_label' => $money($this->fines->maxPerBook()),
         ];
     }
 
@@ -166,8 +169,8 @@ class ReportController extends Controller
                 'total' => (int) $loans->sum('fine_amount'),
                 'unpaid' => (int) DailyLoan::where('fine_amount', '>', 0)->whereNull('fine_paid_at')->sum('fine_amount'),
                 'collected' => (int) DailyLoan::where('fine_amount', '>', 0)->whereNotNull('fine_paid_at')->sum('fine_amount'),
-                'rate' => $money((int) config('perpustakaan.fine.daily_rate', 1000)),
-                'max' => $money((int) config('perpustakaan.fine.max_per_book', 10000)),
+                'rate' => $money($this->fines->dailyRate()),
+                'max' => $money($this->fines->maxPerBook()),
             ],
         ])->setPaper('a4', 'portrait')->download('rekap-denda-'.Carbon::today()->format('Ymd').'.pdf');
     }
