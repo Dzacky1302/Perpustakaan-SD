@@ -4,10 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Models\Book;
 use App\Models\Category;
+use App\Services\BookCodeService;
+use App\Services\BookCopyService;
 use App\Services\BookStockService;
 use App\Services\SpreadsheetService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -16,6 +19,8 @@ class BookController extends Controller
 {
     public function __construct(
         private readonly BookStockService $stock,
+        private readonly BookCopyService $copyService,
+        private readonly BookCodeService $codes,
         private readonly SpreadsheetService $spreadsheet,
     ) {
     }
@@ -35,6 +40,7 @@ class BookController extends Controller
             ->through(fn (Book $book) => [
                 'id' => $book->id,
                 'code' => $book->code,
+                'isbn' => $book->isbn ? $this->codes->formatIsbn($book->isbn) : null,
                 'title' => $book->title,
                 'author' => $book->author,
                 'publisher' => $book->publisher,
@@ -71,25 +77,45 @@ class BookController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate($this->rules());
-        $validated['available_copies'] = $validated['total_copies'];
 
-        Book::create($validated);
+        if (filled($validated['isbn'] ?? null)) {
+            // Disimpan tanpa tanda hubung; format hanya untuk tampilan.
+            $validated['isbn'] = $this->codes->normaliseIsbn($validated['isbn']);
+        }
 
-        return back()->with('success', 'Buku baru berhasil ditambahkan ke katalog.');
+        $book = DB::transaction(function () use ($validated) {
+            $validated['available_copies'] = $validated['total_copies'];
+
+            $book = Book::create($validated);
+
+            // Setiap eksemplar asli harus punya barisnya sendiri supaya
+            // barcode dan nomor registrasi bisa ditelusuri.
+            $this->copyService->ensureCopies($book, $book->total_copies);
+
+            return $book;
+        });
+
+        return back()->with('success', "Buku \"{$book->title}\" berhasil ditambahkan dengan {$book->copies()->count()} eksemplar.");
     }
 
     public function update(Request $request, Book $book): RedirectResponse
     {
         $validated = $request->validate($this->rules($book));
 
-        // Jumlah tersedia ikut berubah ketika total eksemplar disesuaikan.
-        $difference = (int) $validated['total_copies'] - $book->total_copies;
-        $validated['available_copies'] = max(0, min(
-            $validated['total_copies'],
-            $book->available_copies + $difference
-        ));
+        if (filled($validated['isbn'] ?? null)) {
+            $validated['isbn'] = $this->codes->normaliseIsbn($validated['isbn']);
+        }
 
-        $book->update($validated);
+        DB::transaction(function () use ($book, $validated) {
+            $book->update($validated);
+
+            // Menambah eksemplar berarti menambah baris book_copies juga.
+            // Eksemplar yang dikurangi TIDAK dihapus otomatis, karena bisa
+            // sedang dipinjam atau punya riwayat.
+            $this->copyService->ensureCopies($book, (int) $validated['total_copies']);
+
+            $this->stock->sync($book->refresh());
+        });
 
         return back()->with('success', 'Data buku berhasil diperbarui.');
     }
@@ -162,6 +188,19 @@ class BookController extends Controller
                 Rule::unique('books', 'code')->ignore($book?->id),
             ],
             'title' => ['required', 'string', 'max:120'],
+            // ISBN nullable: banyak buku paket SD tidak mencantumkan ISBN.
+            // Kalau diisi, digit checksum-nya tetap diperiksa supaya tidak
+            // tersimpan angka yang salah ketik dari katalog.
+            'isbn' => [
+                'nullable',
+                'string',
+                'max:20',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    if (! app(BookCodeService::class)->isValidIsbn((string) $value)) {
+                        $fail('ISBN tidak valid. Digit terakhirnya tidak cocok dengan buku cetaknya.');
+                    }
+                },
+            ],
             'author' => ['nullable', 'string', 'max:80'],
             'publisher' => ['nullable', 'string', 'max:80'],
             'published_year' => ['nullable', 'integer', 'between:1900,2100'],

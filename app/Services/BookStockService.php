@@ -9,9 +9,18 @@ use App\Models\PackageLoan;
 /**
  * Menjaga konsistensi kolom books.available_copies terhadap
  * peminjaman harian dan peminjaman buku paket yang masih berjalan.
+ *
+ * books.total_copies dan available_copies kini diperlakukan sebagai
+ * RANGKUMAN: keduanya dihitung ulang dari daftar eksemplar. Kolom lama tetap
+ * dipertahankan karena masih dipakai laporan, dan karena ada buku lama yang
+ * belum memiliki data eksemplar sama sekali.
  */
 class BookStockService
 {
+    public function __construct(private readonly BookCopyService $copies)
+    {
+    }
+
     public function isAvailable(Book $book): bool
     {
         return $book->available_copies > 0;
@@ -39,6 +48,8 @@ class BookStockService
      */
     public function sync(Book $book): void
     {
+        $hasCopies = $book->copies()->exists();
+
         $activeDailyLoans = DailyLoan::where('book_id', $book->id)
             ->where('status', DailyLoan::STATUS_DIPINJAM)
             ->count();
@@ -47,6 +58,16 @@ class BookStockService
             ->where('status', PackageLoan::STATUS_DIPINJAM)
             ->count();
 
+        if ($hasCopies) {
+            $book->update([
+                'total_copies' => $book->copies()->count(),
+                'available_copies' => $book->copies()->available()->count(),
+            ]);
+
+            return;
+        }
+
+        // Buku lama yang belum punya eksemplar: andalkan kolom yang sudah ada.
         $available = max(0, $book->total_copies - $activeDailyLoans - $activePackageLoans);
 
         $book->update(['available_copies' => $available]);
@@ -64,5 +85,17 @@ class BookStockService
         }
 
         return $books->count();
+    }
+
+    /**
+     * Pastikan jumlah eksemplar sesuai total_copies, lalu segarkan cache.
+     */
+    public function reconcile(Book $book): void
+    {
+        $this->copies->ensureCopies($book, $book->total_copies);
+
+        $book->refresh();
+
+        $this->sync($book);
     }
 }

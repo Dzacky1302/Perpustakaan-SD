@@ -22,6 +22,7 @@ class DailyLoan extends Model
         'student_id',
         'classroom_id',
         'book_id',
+        'book_copy_id',
         'borrowed_at',
         'due_at',
         'returned_at',
@@ -89,6 +90,17 @@ class DailyLoan extends Model
     public function book(): BelongsTo
     {
         return $this->belongsTo(Book::class);
+    }
+
+    /**
+     * Eksemplar fisik yang sedang dipinjam.
+     *
+     * Nullable karena peminjaman lama belum melacak eksemplar, dan karena
+     * buku yang barcode-nya belum diisi petugas tidak punya kepastian nomor.
+     */
+    public function bookCopy(): BelongsTo
+    {
+        return $this->belongsTo(BookCopy::class);
     }
 
     public function scopeActive(Builder $query): Builder

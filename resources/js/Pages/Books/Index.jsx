@@ -30,6 +30,7 @@ import {
 
 const EMPTY_FORM = {
     code: '',
+    isbn: '',
     title: '',
     author: '',
     publisher: '',
@@ -80,6 +81,7 @@ export default function BooksIndex({ books, categories = [], filters = {}, summa
         setEditing(book);
         form.setData({
             code: book.code ?? '',
+            isbn: book.isbn ?? '',
             title: book.title ?? '',
             author: book.author ?? '',
             publisher: book.publisher ?? '',
@@ -393,6 +395,13 @@ export default function BooksIndex({ books, categories = [], filters = {}, summa
                                 value={form.data.code}
                                 onChange={(event) => form.setData('code', event.target.value)}
                                 placeholder="BK-0001"
+                            />
+                        </Field>
+                        <Field label="ISBN" error={form.errors.isbn}>
+                            <Input
+                                value={form.data.isbn}
+                                onChange={(event) => form.setData('isbn', event.target.value)}
+                                placeholder="979-123-456-7-9"
                             />
                         </Field>
                         <Field label="Judul Buku" error={form.errors.title}>

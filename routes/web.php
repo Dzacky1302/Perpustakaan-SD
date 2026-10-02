@@ -80,6 +80,10 @@ Route::middleware(['auth', 'verified', 'admin'])->group(function () {
     |--------------------------------------------------------------------------
     */
     Route::get('/loans/export', [DailyLoanController::class, 'export'])->name('loans.export');
+
+    // Pencarian buku untuk kolom isian: barcode, ISBN, kode internal, atau judul.
+    Route::get('/loans/cari-buku', [DailyLoanController::class, 'searchBooks'])->name('loans.search-books');
+
     Route::get('/loans/denda', [DailyLoanController::class, 'fines'])->name('loans.fines');
     Route::get('/loans/denda/excel', [DailyLoanController::class, 'finesExcel'])->name('loans.fines.excel');
     Route::patch('/loans/{dailyLoan}/denda', [DailyLoanController::class, 'payFine'])->name('loans.fine.pay');

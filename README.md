@@ -84,7 +84,7 @@ Tombol yang nggak kepake disembunyiin di tampilan, tapi penjaganya beneran ada d
 | Routing JS | Ziggy | Nama route PHP tersedia di React, jadi tidak ada path yang salah ketik |
 | PDF | DomPDF | Slip dan laporan ber-kop sekolah dicetak langsung dari PHP |
 | Excel | OpenSpout | Impor data siswa dan ekspor laporan, ringan untuk skala sekolah |
-| Testing | PHPUnit 11 | 73 feature test menutup logika bisnis dan hak akses |
+| Testing | PHPUnit 11 | 91 feature test menutup logika bisnis dan hak akses |
 
 ---
 
@@ -169,11 +169,21 @@ Jadi ditambah satu kunci khusus per IP. Hasilnya dua lapis yang saling menutup:
 
 Batasnya configurable lewat `.env`, dan ada test yang memastikan kunci per IP benar-benar bekerja — bukan cuma ada di kode.
 
-### 8. Angka tarif tidak pernah ditulis ulang di kode
+### 9. Barcode melekat pada eksemplar, bukan pada judul
 
-Dulu tarif denda ditulis di beberapa tempat sekaligus: fallback controller, teks komponen React, bahkan komentar. Waktu aturan diubah dari Rp1.000 ke Rp500, salinannya tertinggal dan dashboard bisa nampilin nominal berbeda dari laporan.
+Awalnya `books` menyimpan `total_copies`, jadi satu baris mewakili banyak buku fisik. Itu cukup untuk menghitung stok, tapi tidak cukup untuk barcode: tiga salinan "Dongeng" punya judul dan ISBN yang sama, dan harus punya barcode berbeda. Kalau barcode ditaruh di tabel `books`, ketiganya akan bertumpuk dan begitu satu hilang kita tidak tahu eksemplar yang mana.
 
-Sekarang `FineService` satu-satunya pembaca konfigurasi denda. Ada test yang memindai sumber kode dan gagal kalau angka tarif muncul lagi di tempat lain.
+Akibatnya tabel baru `book_copies`: satu baris per buku fisik, lengkap dengan nomor registrasi (untuk inventaris aset BOS) dan barcode. `daily_loans` menyimpan `book_copy_id`, jadi jelas eksemplar mana yang dibawa siswa.
+
+Kolom `total_copies` dan `available_copies` sengaja tidak dihapus: keduanya masih dipakai laporan, tapi kini jadi **ringkasan** yang dihitung ulang dari `book_copies`.
+
+Kolom isbn disimpan tanpa tanda hubung supaya pencarian tidak terganggu format; tanda hubung hanya dipakai saat ditampilkan.
+
+### 10. Satu kolom isian menerima empat cara pencarian
+
+Petugas tidak perlu tahu sedang mengetik apa. Satu kolom di form peminjaman membaca barcode, ISBN, kode internal, atau kata kunci judul, lalu menentukan sendiri mana yang cocok. Semua jalur berakhir sama: menentukan judul dan, bila ada, eksemplar yang dipinjam.
+
+Hasil pembacaannya ditampilkan terbuka, jadi petugas tahu persis buku dan eksemplar mana yang terpilih. Kalau hanya ISBN atau judul yang diketik, sistem memilih eksemplar yang available secara otomatis; eksemplar tertentu dipilih sendiri kalau yang diketik barcodenya.
 
 
 ## Instalasi
@@ -271,7 +281,7 @@ php artisan test --testdox                 # output lebih mudah dibaca
 php artisan test --filter Fine             # hanya test denda
 ```
 
-Status saat ini: **73 test, 224 assertion, semuanya lulus.**
+Status saat ini: **91 test, 276 assertion, semuanya lulus.**
 
 Cakupan test meliputi snapshot kelas saat siswa naik kelas, pembatasan role
 pustakawan dan kepala sekolah, perhitungan denda per hari sekolah (termasuk
@@ -284,7 +294,7 @@ penolakan path traversal.
 Yang belum ada, aku tulis aja biar jelas:
 
 - **Belum ada REST API.** Semua masih server-rendered Inertia.
-- **Belum ada test frontend.** 73 test semuanya di sisi PHP, komponen React belum disentuh.
+- **Belum ada test frontend.** 91 test semuanya di sisi PHP, komponen React belum disentuh.
 - **Frontend masih JavaScript**, belum TypeScript.
 - **Belum ada halaman error** (404/500) dan belum ada error boundary di React.
 - **Backup cuma di storage lokal server.** Kalau perangkatnya rusak, filenya perlu disalin manual ke media lain.

@@ -14,6 +14,7 @@ class Book extends Model
 
     protected $fillable = [
         'code',
+        'isbn',
         'title',
         'author',
         'publisher',
@@ -62,6 +63,20 @@ class Book extends Model
         return $this->hasMany(PackageLoan::class);
     }
 
+    /**
+     * Eksemplar fisik milik judul ini.
+     */
+    public function copies(): HasMany
+    {
+        return $this->hasMany(BookCopy::class);
+    }
+
+    /**
+     * Pencarian memuat ISBN dan barcode eksemplar, bukan hanya kolom buku.
+     *
+     * Petugas bisa mengetik apa pun yang ada di tangannya: kode internal
+     * (BK-0001), ISBN tercetak di sampul, barcode stiker, atau judul.
+     */
     public function scopeSearch(Builder $query, ?string $term): Builder
     {
         if (blank($term)) {
@@ -71,8 +86,10 @@ class Book extends Model
         return $query->where(function (Builder $query) use ($term) {
             $query->where('title', 'like', "%{$term}%")
                 ->orWhere('code', 'like', "%{$term}%")
+                ->orWhere('isbn', 'like', "%{$term}%")
                 ->orWhere('author', 'like', "%{$term}%")
-                ->orWhere('publisher', 'like', "%{$term}%");
+                ->orWhere('publisher', 'like', "%{$term}%")
+                ->orWhereHas('copies', fn (Builder $copy) => $copy->where('barcode', $term));
         });
     }
 

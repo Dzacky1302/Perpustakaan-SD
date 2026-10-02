@@ -3,13 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Models\Book;
+use App\Models\BookCopy;
 use App\Models\DailyLoan;
 use App\Models\Student;
+use App\Services\BookCopyService;
 use App\Services\BookStockService;
 use App\Services\FineService;
 use App\Services\SlipService;
 use App\Services\SpreadsheetService;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -21,6 +24,7 @@ class DailyLoanController extends Controller
 {
     public function __construct(
         private readonly BookStockService $stock,
+        private readonly BookCopyService $copyService,
         private readonly SpreadsheetService $spreadsheet,
         private readonly FineService $fine,
         private readonly SlipService $slip,
@@ -78,20 +82,47 @@ class DailyLoanController extends Controller
                     DailyLoan::where('fine_amount', '>', 0)->whereNull('fine_paid_at')->distinct('student_id')->pluck('student_id')
                 )->count(),
             ],
+
+            // Dipakai form "Catat Peminjaman".
+            'students' => Student::query()
+                ->where('is_active', true)
+                ->with('classroom:id,name')
+                ->orderBy('name')
+                ->get()
+                ->map(fn (Student $student) => [
+                    'id' => $student->id,
+                    'name' => $student->name,
+                    'nisn' => $student->nisn,
+                    'classroom' => $student->classroom?->name,
+                    'active_loans' => DailyLoan::where('student_id', $student->id)
+                        ->where('status', DailyLoan::STATUS_DIPINJAM)
+                        ->count(),
+                ]),
+            'loanDays' => (int) config('perpustakaan.loan_days', 7),
+            'maxLoans' => (int) config('perpustakaan.max_loans_per_student', 2),
         ]);
     }
 
     public function store(Request $request): RedirectResponse
     {
+        // Satu kolom isian menerima apa pun: barcode stiker, ISBN tercetak,
+        // kode internal, atau kata kunci judul. Kalau semuanya kosong,
+        // petugas boleh memilih buku dari daftar seperti biasa.
         $validated = $request->validate([
             'student_id' => ['required', 'integer', 'exists:students,id'],
-            'book_id' => ['required', 'integer', 'exists:books,id'],
+            'book_id' => ['nullable', 'integer', 'exists:books,id'],
+            'book_query' => ['nullable', 'string', 'max:120'],
+            'book_copy_id' => ['nullable', 'integer', 'exists:book_copies,id'],
             'borrowed_at' => ['nullable', 'date'],
             'loan_days' => ['nullable', 'integer', 'between:1,30'],
             'notes' => ['nullable', 'string', 'max:150'],
         ]);
 
-        $book = Book::findOrFail($validated['book_id']);
+        $book = $this->resolveBook($validated);
+
+        if (! $book) {
+            return back()->with('error', 'Buku tidak ditemukan. Scan barcode, ketik ISBN/kode, atau pilih dari daftar.');
+        }
 
         if (! $this->stock->isAvailable($book)) {
             return back()->with('error', "Stok \"{$book->title}\" sedang kosong, semua eksemplar dipinjam.");
@@ -113,6 +144,7 @@ class DailyLoanController extends Controller
                 'student_id' => $student->id,
                 'classroom_id' => $student->classroom_id,
                 'book_id' => $book->id,
+                'book_copy_id' => $this->resolveCopy($book, $validated),
                 'borrowed_at' => $borrowedAt,
                 'due_at' => $borrowedAt->copy()->addDays($validated['loan_days'] ?? 7),
                 'status' => DailyLoan::STATUS_DIPINJAM,
@@ -126,6 +158,91 @@ class DailyLoanController extends Controller
         });
 
         return back()->with('success', "Peminjaman \"{$book->title}\" oleh {$student->name} berhasil dicatat.");
+    }
+
+    /**
+     * Pencarian buku untuk kolom isian pada form peminjaman.
+     *
+     * Menerima barcode, ISBN, kode internal, atau kata kunci. Dipakai juga
+     * sebagai daftar cadangan ketika barcode tidak terbaca.
+     */
+    public function searchBooks(Request $request): JsonResponse
+    {
+        $term = trim((string) $request->query('q', ''));
+
+        // Input yang persis cocok deserve jawaban pasti, bukan daftar tebakan.
+        if ($term !== '') {
+            $found = $this->copyService->locate($term);
+
+            if ($found['book']) {
+                return response()->json(['books' => [$this->bookPayload($found['book'], $found['copy'], $found['matched_by'])]]);
+            }
+        }
+
+        $books = $this->copyService->search($term, 12)
+            ->map(fn (Book $book) => $this->bookPayload($book, null, null))
+            ->values();
+
+        return response()->json(['books' => $books]);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function bookPayload(Book $book, ?BookCopy $copy, ?string $matchedBy): array
+    {
+        return [
+            'id' => $book->id,
+            'code' => $book->code,
+            'isbn' => $book->isbn,
+            'title' => $book->title,
+            'author' => $book->author,
+            'available_copies' => $book->available_copies,
+            'book_copy_id' => $copy?->id,
+            'accession_number' => $copy?->accession_number,
+            'barcode' => $copy?->barcode,
+            'matched_by' => $matchedBy,
+        ];
+    }
+
+    /**
+     * Tentukan buku dari input bebas (barcode/ISBN/kode/judul) atau pilihan menu.
+     */
+    private function resolveBook(array $validated): ?Book
+    {
+        if (filled($validated['book_id'] ?? null)) {
+            return Book::find($validated['book_id']);
+        }
+
+        if (filled($validated['book_query'] ?? null)) {
+            $found = $this->copyService->locate($validated['book_query'])['book'];
+
+            if ($found) {
+                return $found;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Eksemplar mana yang dipinjam.
+     *
+     * Kalau petugas memilih eksemplar secara spesifik (mis. lewat barcode),
+     * itu yang dipakai. Kalau hanya mengetik ISBN atau judul, sistem memilih
+     * eksemplar yang available secara otomatis.
+     */
+    private function resolveCopy(Book $book, array $validated): ?int
+    {
+        if (filled($validated['book_copy_id'] ?? null)) {
+            $copy = BookCopy::find($validated['book_copy_id']);
+
+            if ($copy && $copy->book_id === $book->id) {
+                return $copy->id;
+            }
+        }
+
+        return $this->copyService->allocate($book)?->id;
     }
 
     /**

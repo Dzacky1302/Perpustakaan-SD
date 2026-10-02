@@ -1,4 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import BorrowModal from '@/Components/BorrowModal';
 import Modal from '@/Components/Modal';
 import Pagination from '@/Components/Pagination';
 import { Badge, Button, Card, EmptyState, Field, Input, PageHeader, Select, cn } from '@/Components/ui';
@@ -30,7 +31,7 @@ const STATUS_TABS = [
     { value: 'semua', label: 'Semua Data' },
 ];
 
-export default function DailyLoansIndex({ loans, filters = {}, summary }) {
+export default function DailyLoansIndex({ loans, filters = {}, summary, students = [], loanDays = 7, maxLoans = 2 }) {
     const today = new Date().toISOString().slice(0, 10);
 
     const [filterState, setFilterState] = useState({
@@ -40,6 +41,7 @@ export default function DailyLoansIndex({ loans, filters = {}, summary }) {
         to: filters.to ?? '',
     });
     const [returning, setReturning] = useState(null);
+    const [borrowing, setBorrowing] = useState(false);
 
     const returnForm = useForm({ returned_at: today, notes: '' });
 
@@ -88,6 +90,12 @@ export default function DailyLoansIndex({ loans, filters = {}, summary }) {
                     subtitle="Monitoring peminjaman, pengembalian, dan buku hilang"
                 >
                         <div className="flex flex-wrap items-center gap-2">
+                            <CanManage>
+                                <Button size="sm" onClick={() => setBorrowing(true)}>
+                                    <BookMarked className="h-3.5 w-3.5" />
+                                    Catat Peminjaman
+                                </Button>
+                            </CanManage>
                             <a
                                 href={exportUrl}
                                 className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-xs font-bold text-slate-700 transition hover:bg-slate-50"
@@ -392,6 +400,14 @@ export default function DailyLoansIndex({ loans, filters = {}, summary }) {
                         <Pagination meta={loans.meta ?? loans} links={loans.links ?? []} />
                     </>
                 )}
+
+                <BorrowModal
+                    show={borrowing}
+                    onClose={() => setBorrowing(false)}
+                    students={students}
+                    loanDays={loanDays}
+                    maxLoans={maxLoans}
+                />
             </Card>
             <Modal show={Boolean(returning)} onClose={() => setReturning(null)} maxWidth="md">
                 <form onSubmit={submitReturn}>

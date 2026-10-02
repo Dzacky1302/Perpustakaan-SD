@@ -149,11 +149,18 @@ class MasterDataSeeder extends Seeder
         ];
 
         $number = 1;
+        $codes = app(\App\Services\BookCodeService::class);
+        $sequence = 0;
 
         foreach ($subjects as $subject) {
             foreach ($subject['grades'] as $grade) {
+                $sequence++;
+
                 Book::create([
                     'code' => 'BK-'.str_pad((string) $number, 4, '0', STR_PAD_LEFT),
+                    // ISBN data contoh sengaja dibuat dari checksum yang valid
+                    // supaya form ISBN bisa dicoba tanpa langsung ditolak.
+                    'isbn' => $codes->generateIsbn($sequence),
                     'title' => Str::limit("Buku Siswa {$subject['mapel']} Kelas {$grade} SD", 120, ''),
                     'author' => 'Tim Penulis Kemendikbudristek',
                     'publisher' => 'Pusat Perbukuan, Kemendikbudristek',
