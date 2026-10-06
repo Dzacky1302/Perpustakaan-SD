@@ -15,8 +15,12 @@ use Tests\TestCase;
 /**
  * Slip cetak: surat peminjaman, surat pengembalian, dan kuitansi denda.
  *
- * Semua slip hanya boleh dicetak pada kondisi yang benar, supaya arsip
- * kertas tidak pernah berisi data yang belum final.
+ * Setiap slip hanya boleh dicetak pada kondisi yang benar. Surat pengembalian
+ * menunggu buku benar-benar kembali, kuitansi menunggu dendanya dikunci —
+ * supaya arsip kertas tidak pernah berisi angka yang masih berubah.
+ *
+ * Kuitansi tagihan memang dicetak sebelum dibayar: itulah gunanya, dibawa
+ * pulang untuk ditunjukkan kepada orang tua.
  */
 class SlipTest extends TestCase
 {
@@ -110,10 +114,19 @@ class SlipTest extends TestCase
         $this->assertNotNull($this->loan->fresh()->return_slip_number);
     }
 
-    public function test_kuitansi_denda_ditolak_saat_belum_lunas(): void
+    public function test_kuitansi_tagihan_bisa_dicetak_sebelum_dibayar(): void
     {
+        // Tagihan justru dibuat untuk dibawa pulang sebelum bayar, jadi
+        // sudah final begitu dendanya dikunci pada saat pengembalian.
         $this->actingAs($this->admin)->patch("/loans/{$this->loan->id}/kembali");
 
+        $this->assertIsPdf($this->actingAs($this->admin)->get("/loans/{$this->loan->id}/slip-denda"));
+    }
+
+    public function test_kuitansi_ditolak_saat_buku_masih_dipinjam(): void
+    {
+        // Denda belum dikunci selama buku masih di tangan siswa, jadi
+        // nominal yang tercetak bisa berbeda dengan tagihan akhir.
         $this->actingAs($this->admin)
             ->get("/loans/{$this->loan->id}/slip-denda")
             ->assertRedirect();

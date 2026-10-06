@@ -39,7 +39,7 @@ Aplikasinya dipakai dua cara:
 | **Denda** | Dihitung otomatis per **hari sekolah**, dibayar di loket, dan memblokir peminjaman berikutnya bila belum lunas. |
 | **Buku Paket** | Distribusi massal satu kelas sekali klik, dengan matriks penerimaan dan pengembalian per siswa. |
 | **Kenaikan Kelas** | Memindahkan seluruh siswa satu tingkat dalam satu aksi, tanpa merusak riwayat kelas. |
-| **Slip Cetak** | Surat peminjaman, surat pengembalian, dan kuitansi denda dalam PDF A5 ber-kop sekolah. |
+| **Slip Cetak** | Surat peminjaman, surat pengembalian, dan kuitansi denda — tagihan (KT) maupun pelunasan (KP) — dalam PDF A5 ber-kop sekolah, lengkap dengan kode verifikasi dan riwayat cetak per salinan. |
 | **Laporan** | PDF dan Excel ber-kop sekolah: buku tamu, peminjaman, buku paket, denda, serta surat bebas pustaka. |
 | **Cadangan Otomatis** | `VACUUM INTO` terjadwal harian, rotasi 14 berkas, dan pemulihan data yang aman. |
 | **Manajemen Data** | Kelas, siswa (impor Excel), kategori, dan katalog buku lengkap dengan pengelolaan stok. |
@@ -54,6 +54,8 @@ Dua level, dijaga di sisi server lewat middleware:
 | **Kepala Sekolah** (`kepsek`) | Lihat semua halaman, cetak, unduh laporan. Nggak bisa ubah data. |
 
 Tombol yang nggak kepake disembunyiin di tampilan, tapi penjaganya beneran ada di server — coba `POST`/`PATCH`/`DELETE` langsung, ditolak **403**.
+
+Satu pengecualian yang sengaja dipersempit: **mencetak kuitansi denda** hanya boleh pustakawan. Kepsek tetap dapat 403, karena tiap cetakan menambah salinan resmi yang tercatat di arsip.
 
 
 ## Screenshot
@@ -84,7 +86,7 @@ Tombol yang nggak kepake disembunyiin di tampilan, tapi penjaganya beneran ada d
 | Routing JS | Ziggy | Nama route PHP tersedia di React, jadi tidak ada path yang salah ketik |
 | PDF | DomPDF | Slip dan laporan ber-kop sekolah dicetak langsung dari PHP |
 | Excel | OpenSpout | Impor data siswa dan ekspor laporan, ringan untuk skala sekolah |
-| Testing | PHPUnit 11 | 91 feature test menutup logika bisnis dan hak akses |
+| Testing | PHPUnit 11 | 105 feature test menutup logika bisnis dan hak akses |
 
 ---
 
@@ -96,13 +98,16 @@ bukan di Controller, supaya dapat dipakai ulang dan diuji terpisah.
 ```
 app/Http/Controllers/     app/Services/                 app/Console/Commands/
 ├── DailyLoanController   ├── FineService              ├── BackupDatabaseCommand
-├── ReportController      ├── SlipService              └── RecalculateFinesCommand
-├── BackupController      ├── BackupService
-└── ...                   ├── LibraryVisitService
+├── ReportController      ├── FineReceiptService       ├── RecalculateFinesCommand
+├── BackupController      ├── SlipService
+└── ...                   ├── BackupService
+                         ├── LibraryVisitService
                          ├── BookStockService
-resources/js/Pages/       └── SpreadsheetService
-├── Circulation/  ├── Master/
-├── Kiosk/        └── System/Backups.jsx
+                         └── SpreadsheetService
+
+resources/js/Pages/
+├── Circulation/   ├── Master/
+├── Kiosk/         └── System/Backups.jsx
 ```
 
 `app/Http/Middleware/EnsureAdmin.php` menjadi satu-satunya penjaga hak akses
@@ -185,6 +190,16 @@ Petugas tidak perlu tahu sedang mengetik apa. Satu kolom di form peminjaman memb
 
 Hasil pembacaannya ditampilkan terbuka, jadi petugas tahu persis buku dan eksemplar mana yang terpilih. Kalau hanya ISBN atau judul yang diketik, sistem memilih eksemplar yang available secara otomatis; eksemplar tertentu dipilih sendiri kalau yang diketik barcodenya.
 
+
+### 11. Kuitansi denda punya dua versi, plus riwayat cetak
+
+Kuitansi denda bukan satu dokumen. Sebelum dibayar, yang dicetak adalah **tagihan** (kode `KT`); setelah dibayar, yang dicetak adalah **pelunasan** (kode `KP`). Keduanya selalu mengambil angka dari `fine_amount` yang sudah dikunci, bukan dari hitungan yang masih berjalan — jadi nominal di kertas tidak akan berubah walau perhitungan denda dihitung ulang.
+
+Setiap pencetakan dicatat di `fine_receipt_prints`, lengkap dengan petugas dan waktunya. Cetakan pertama dianggap asli; cetakan kedua ke atas otomatis diberi watermark **SALINAN** dengan nomor salinannya. Akibatnya satu kuitansi tidak bisa dipakai dua kali untuk meyakinkan orang tua, dan arsipnya bisa jawab "sudah berapa kali dokumen ini dicetak?".
+
+Di kuitansi tercetak kode verifikasi 8 karakter dari alfabet yang sengaja dibuang huruf mirip (`O/0`, `I/1`, `S/5`, `B/8`, `Z/2`), supaya enak dibaca dari kertas. Pengecekannya ada di `/kuitansi-denda/cek`, tapi **khusus petugas yang sudah masuk**. Kalau dibuka untuk publik, kode 8 karakter bisa ditebak dari luar dan justru jadi jaminan palsu.
+
+Cetak kuitansinya sendiri dibatasi pustakawan saja — kepsek dapat **403** — karena tiap cetakan menambah salinan resmi yang tercatat di arsip.
 
 ## Instalasi
 
@@ -281,20 +296,21 @@ php artisan test --testdox                 # output lebih mudah dibaca
 php artisan test --filter Fine             # hanya test denda
 ```
 
-Status saat ini: **91 test, 276 assertion, semuanya lulus.**
+Status saat ini: **105 test, 399 assertion, semuanya lulus.**
 
 Cakupan test meliputi snapshot kelas saat siswa naik kelas, pembatasan role
 pustakawan dan kepala sekolah, perhitungan denda per hari sekolah (termasuk
 akhir pekan, libur nasional, dan cuti bersama), konsistensi tarif antar layar,
-pembatasan percobaan login, slip PDF, serta backup database termasuk rotasi dan
-penolakan path traversal.
+pembatasan percobaan login, slip PDF, kuitansi denda (dua versi, kode
+verifikasi, dan riwayat cetak per salinan), serta backup database termasuk
+rotasi dan penolakan path traversal.
 
 ## Keterbatasan
 
 Yang belum ada, aku tulis aja biar jelas:
 
 - **Belum ada REST API.** Semua masih server-rendered Inertia.
-- **Belum ada test frontend.** 91 test semuanya di sisi PHP, komponen React belum disentuh.
+- **Belum ada test frontend.** 105 test semuanya di sisi PHP, komponen React belum disentuh.
 - **Frontend masih JavaScript**, belum TypeScript.
 - **Belum ada halaman error** (404/500) dan belum ada error boundary di React.
 - **Backup cuma di storage lokal server.** Kalau perangkatnya rusak, filenya perlu disalin manual ke media lain.

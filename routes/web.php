@@ -6,6 +6,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ClassroomController;
 use App\Http\Controllers\DailyLoanController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\FineReceiptController;
 use App\Http\Controllers\KioskController;
 use App\Http\Controllers\PackageLoanController;
 use App\Http\Controllers\ProfileController;
@@ -92,10 +93,20 @@ Route::middleware(['auth', 'verified', 'admin'])->group(function () {
     Route::patch('/loans/{dailyLoan}/hilang', [DailyLoanController::class, 'lost'])->name('loans.lost');
     Route::get('/loans/{dailyLoan}/slip-pinjaman', [DailyLoanController::class, 'printSlip'])->name('loans.slip');
     Route::get('/loans/{dailyLoan}/slip-kembali', [DailyLoanController::class, 'printReturnSlip'])->name('loans.slip-return');
-    Route::get('/loans/{dailyLoan}/slip-denda', [DailyLoanController::class, 'printFineSlip'])->name('loans.slip-fine');
+    Route::get('/loans/{dailyLoan}/slip-denda', [FineReceiptController::class, 'print'])->name('loans.slip-fine');
     Route::resource('loans', DailyLoanController::class)
         ->except(['create', 'show', 'edit'])
         ->parameters(['loans' => 'dailyLoan']);
+
+    /*
+    |--------------------------------------------------------------------------
+    | Kuitansi denda: arsip cetak & pengecekan kode verifikasi
+    |--------------------------------------------------------------------------
+    | Kuitansi terbit otomatis (tagihan saat buku kembali, pelunasan saat
+    | dibayar), jadi halaman ini hanya memeriksa dan mencetak ulang.
+    */
+    Route::get('/kuitansi-denda', [FineReceiptController::class, 'index'])->name('receipts.index');
+    Route::get('/kuitansi-denda/cek', [FineReceiptController::class, 'verify'])->name('receipts.verify');
 
     /*
     |--------------------------------------------------------------------------

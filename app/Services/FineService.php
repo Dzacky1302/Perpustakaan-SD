@@ -197,6 +197,13 @@ class FineService
             'fine_days_late' => $this->daysLate($loan, $reference),
         ])->save();
 
+        // Kuitansi tagihan terbit otomatis begitu utang dendanya terbentuk.
+        // Siswa sering belum punya uang hari itu juga, jadi kuitansi inilah
+        // yang dibawa pulang untuk ditagih ke orang tua.
+        if ((int) $loan->fine_amount > 0) {
+            app(FineReceiptService::class)->issueForFine($loan, null, $reference);
+        }
+
         return $loan;
     }
 
@@ -245,11 +252,19 @@ class FineService
      */
     public function markPaid(DailyLoan $loan, User $receiver, ?string $notes = null, ?Carbon $paidAt = null): DailyLoan
     {
+        $paidOn = $paidAt ?? Carbon::today();
+
         $loan->forceFill([
-            'fine_paid_at' => $paidAt ?? Carbon::today(),
+            'fine_paid_at' => $paidOn,
             'fine_received_by' => $receiver->id,
             'fine_notes' => $notes,
         ])->save();
+
+        // Kuitansi pelunasan terbit otomatis, sebagai bukti resmi bahwa
+        // denda untuk peminjaman ini sudah dibayar.
+        if ((int) $loan->fine_amount > 0) {
+            app(FineReceiptService::class)->issueForPayment($loan, $receiver, $paidOn);
+        }
 
         return $loan;
     }

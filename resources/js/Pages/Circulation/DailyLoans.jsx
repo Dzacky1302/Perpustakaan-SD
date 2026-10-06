@@ -343,16 +343,24 @@ export default function DailyLoansIndex({ loans, filters = {}, summary, students
                                                             <FileText className="h-4 w-4" />
                                                         </button>
                                                     )}
-                                                    {loan.fine > 0 && (
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => window.open(route('loans.slip-fine', loan.id), '_blank')}
-                                                            className="rounded-md p-1.5 text-slate-400 transition hover:bg-amber-50 hover:text-amber-600"
-                                                            title="Cetak kuitansi denda"
-                                                        >
-                                                            <Receipt className="h-4 w-4" />
-                                                        </button>
-                                                    )}
+                                                    <CanManage>
+                                                        {loan.status !== 'dipinjam' && loan.fine > 0 && (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() =>
+                                                                    window.open(route('loans.slip-fine', loan.id), '_blank')
+                                                                }
+                                                                className="rounded-md p-1.5 text-slate-400 transition hover:bg-amber-50 hover:text-amber-600"
+                                                                title={
+                                                                    loan.fine_paid
+                                                                        ? 'Cetak kuitansi pelunasan'
+                                                                        : 'Cetak kuitansi tagihan'
+                                                                }
+                                                            >
+                                                                <Receipt className="h-4 w-4" />
+                                                            </button>
+                                                        )}
+                                                    </CanManage>
                                                     <CanManage>
                                                         {loan.status === 'dipinjam' && (
                                                             <>

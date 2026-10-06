@@ -5,7 +5,7 @@ import { Badge, Button, Card, EmptyState, Field, Input, PageHeader, cn } from '@
 import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
 import { CanManage } from '@/hooks/useCanManage';
-import { Banknote, CheckCircle2, Download, Info, Receipt, RotateCcw, Search, TrendingUp, X } from 'lucide-react';
+import { Banknote, CheckCircle2, Download, Info, Receipt, RotateCcw, Search, ShieldCheck, TrendingUp, X } from 'lucide-react';
 
 const STATUS_TABS = [
     { value: 'belum', label: 'Belum Dibayar' },
@@ -62,6 +62,20 @@ export default function FinesIndex({ fines, filters = {}, summary = {} }) {
                     title="Denda Keterlambatan"
                     subtitle={`${summary.rate ?? 'Rp500'} per hari sekolah · maksimal ${summary.max ?? 'Rp10.000'} per buku`}
                 >
+                    <a
+                        href={route('receipts.verify')}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-xs font-bold text-slate-700 transition hover:bg-slate-50"
+                    >
+                        <ShieldCheck className="h-3.5 w-3.5" />
+                        Cek Kode
+                    </a>
+                    <a
+                        href={route('receipts.index')}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-xs font-bold text-slate-700 transition hover:bg-slate-50"
+                    >
+                        <Receipt className="h-3.5 w-3.5" />
+                        Arsip Kuitansi
+                    </a>
                     <a
                         href={exportUrl}
                         className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-xs font-bold text-slate-700 transition hover:bg-slate-50"
@@ -262,30 +276,41 @@ export default function FinesIndex({ fines, filters = {}, summary = {} }) {
 }
 
 function FineActions({ fine, onPay, onCancel }) {
+    // Kuitansi selalu bisa dicetak, dalam keadaan apa pun:
+    // belum dibayar -> kuitansi tagihan (dibawa pulang untuk ditagih ke orang tua)
+    // sudah dibayar -> kuitansi pelunasan (bukti resmi sudah lunas)
+    const printLabel = fine.paid ? 'Cetak kuitansi pelunasan' : 'Cetak kuitansi tagihan';
+
     return (
         <td className="px-5 py-3">
             <div className="flex items-center justify-end gap-1.5">
+                <CanManage>
+                    <button
+                        type="button"
+                        onClick={() => window.open(route('loans.slip-fine', fine.id), '_blank')}
+                        className={cn(
+                            'rounded-md p-1.5 transition',
+                            fine.paid
+                                ? 'text-slate-400 hover:bg-sky-50 hover:text-sky-600'
+                                : 'text-amber-500 hover:bg-amber-50 hover:text-amber-700',
+                        )}
+                        title={printLabel}
+                    >
+                        <Receipt className="h-4 w-4" />
+                    </button>
+                </CanManage>
+
                 {fine.paid ? (
-                    <>
+                    <CanManage>
                         <button
                             type="button"
-                            onClick={() => window.open(route('loans.slip-fine', fine.id), '_blank')}
-                            className="rounded-md p-1.5 text-slate-400 transition hover:bg-sky-50 hover:text-sky-600"
-                            title="Cetak kuitansi"
+                            onClick={() => onCancel(fine)}
+                            className="rounded-md p-1.5 text-slate-400 transition hover:bg-amber-50 hover:text-amber-600"
+                            title="Batalkan pembayaran"
                         >
-                            <Receipt className="h-4 w-4" />
+                            <RotateCcw className="h-4 w-4" />
                         </button>
-                        <CanManage>
-                            <button
-                                type="button"
-                                onClick={() => onCancel(fine)}
-                                className="rounded-md p-1.5 text-slate-400 transition hover:bg-amber-50 hover:text-amber-600"
-                                title="Batalkan pembayaran"
-                            >
-                                <RotateCcw className="h-4 w-4" />
-                            </button>
-                        </CanManage>
-                    </>
+                    </CanManage>
                 ) : (
                     <CanManage>
                         <Button type="button" className="px-2.5 py-1.5" onClick={() => onPay(fine)}>

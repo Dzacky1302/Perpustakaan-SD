@@ -170,7 +170,7 @@ class DailyLoanController extends Controller
     {
         $term = trim((string) $request->query('q', ''));
 
-        // Input yang persis cocok deserve jawaban pasti, bukan daftar tebakan.
+        // Input yang persis cocok berhak mendapat jawaban pasti, bukan daftar tebakan.
         if ($term !== '') {
             $found = $this->copyService->locate($term);
 
@@ -413,26 +413,6 @@ class DailyLoanController extends Controller
             'classroomName' => $loan->effectiveClassroom()?->name ?? $loan->student?->classroom?->name,
             'slipNumber' => $loan->fresh()->return_slip_number,
         ], 'surat-pengembalian-'.($loan->fresh()->return_slip_number ?: $loan->id));
-    }
-
-    /**
-     * Kuitansi pembayaran denda.
-     */
-    public function printFineSlip(DailyLoan $dailyLoan)
-    {
-        $loan = $dailyLoan->load(['student.classroom', 'classroom', 'book', 'fineReceiver']);
-
-        if (! $loan->fineIsPaid()) {
-            return back()->with('error', 'Denda ini belum tercatat lunas, kuitansi belum bisa dicetak.');
-        }
-
-        return $this->inlinePdf('slips.fine', [
-            'loan' => $loan,
-            'student' => $loan->student,
-            'book' => $loan->book,
-            'fineLabel' => $this->fine->format((int) $loan->fine_amount),
-            'classroomName' => $loan->effectiveClassroom()?->name ?? $loan->student?->classroom?->name,
-        ], 'kuitansi-denda-'.$loan->id);
     }
 
     /**

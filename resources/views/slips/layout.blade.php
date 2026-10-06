@@ -36,6 +36,19 @@
         .potong { border-top: 1px dashed #9ca3af; margin-top: 10px; padding-top: 6px; font-size: 8px; color: #6b7280; }
         .besar { font-size: 15px; font-weight: bold; }
         .kuning { background: #fef3c7; }
+        .hijau { background: #dcfce7; }
+        .kode {
+            border: 1.5px dashed #4b5563; border-radius: 3px; padding: 6px 8px;
+            margin: 6px 0 10px; text-align: center;
+        }
+        .kode .judul-kode { font-size: 8px; text-transform: uppercase; letter-spacing: 0.8px; color: #6b7280; }
+        .kode .isi-kode { font-size: 17px; font-weight: bold; letter-spacing: 3px; font-family: DejaVu Sans Mono, monospace; }
+        .salinan {
+            position: fixed; top: 42%; left: 0; right: 0; text-align: center;
+            font-size: 58px; font-weight: bold; color: rgba(185, 28, 28, 0.16);
+            letter-spacing: 8px; transform: rotate(-22deg); pointer-events: none;
+        }
+        .salinan-teks { font-size: 9px; font-weight: bold; color: #b91c1c; text-align: right; margin-bottom: 4px; }
     </style>
 </head>
 <body>
@@ -57,7 +70,20 @@
 
     <div class="nomor">Nomor: {{ $slipNumber ?? '-' }}</div>
 
+    @unless (empty($salinan))
+        <div class="salinan-teks">
+            SALINAN KE-{{ $salinan }} &mdash; dokumen ini bukan salinan asli
+        </div>
+    @endunless
+
     <h1 class="judul">{{ $title ?? 'Slip Perpustakaan' }}</h1>
+
+    @unless (empty($verificationCode))
+        <div class="kode">
+            <div class="judul-kode">Kode Verifikasi Kuitansi</div>
+            <div class="isi-kode">{{ $verificationCode }}</div>
+        </div>
+    @endunless
 
     @yield('content')
 
@@ -98,5 +124,9 @@
         Dicetak dari PustakaSD pada {{ now()->translatedFormat('d F Y H:i') }} WIB.
         Simpan slip ini sebagai bukti resmi perpustakaan sekolah.
     </div>
+
+    @unless (empty($salinan))
+        <div class="salinan">SALINAN</div>
+    @endunless
 </body>
 </html>
