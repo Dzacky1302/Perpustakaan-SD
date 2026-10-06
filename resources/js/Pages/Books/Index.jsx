@@ -248,10 +248,12 @@ export default function BooksIndex({ books, categories = [], filters = {}, summa
                             title="Belum ada buku yang cocok"
                             description="Tambahkan buku baru atau ubah kata kunci pencarian."
                             action={
-                                <Button type="button" onClick={openCreate}>
-                                    <Plus className="h-3.5 w-3.5" />
-                                    Tambah Buku
-                                </Button>
+                                <CanManage>
+                                    <Button type="button" onClick={openCreate}>
+                                        <Plus className="h-3.5 w-3.5" />
+                                        Tambah Buku
+                                    </Button>
+                                </CanManage>
                             }
                         />
                     </div>

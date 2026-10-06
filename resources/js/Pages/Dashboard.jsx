@@ -1,5 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Badge, Card, EmptyState, PageHeader, StatCard } from '@/Components/ui';
+import { CanManage } from '@/hooks/useCanManage';
 import { Head, Link } from '@inertiajs/react';
 import {
     BookMarked,
@@ -51,22 +52,26 @@ export default function Dashboard({
                     title="Dashboard Perpustakaan"
                     subtitle={`Rekapitulasi aktivitas perpustakaan — ${today}`}
                 >
-                    <Link
-                        href={route('kiosk.index')}
-                        className="inline-flex items-center gap-1.5 rounded-lg bg-amber-500 px-3.5 py-2 text-xs font-bold text-white transition hover:bg-amber-600"
-                    >
-                        <Tv className="h-4 w-4" />
-                        Buka Buku Tamu
-                    </Link>
-                    <Link
-                        href={route('peminjaman.index')}
-                        target="_blank"
-                        rel="noopener"
-                        className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-xs font-bold text-slate-700 transition hover:bg-slate-50"
-                    >
-                        <BookMarked className="h-4 w-4" />
-                        Lihat Formulir Siswa
-                    </Link>
+                    {/* Kedua tombol ini menuju halaman INPUT (buku tamu kios
+                        & formulir portal siswa), jadi hanya untuk pustakawan. */}
+                    <CanManage>
+                        <Link
+                            href={route('kiosk.index')}
+                            className="inline-flex items-center gap-1.5 rounded-lg bg-amber-500 px-3.5 py-2 text-xs font-bold text-white transition hover:bg-amber-600"
+                        >
+                            <Tv className="h-4 w-4" />
+                            Buka Buku Tamu
+                        </Link>
+                        <Link
+                            href={route('peminjaman.index')}
+                            target="_blank"
+                            rel="noopener"
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-xs font-bold text-slate-700 transition hover:bg-slate-50"
+                        >
+                            <BookMarked className="h-4 w-4" />
+                            Lihat Formulir Siswa
+                        </Link>
+                    </CanManage>
                 </PageHeader>
             }
         >

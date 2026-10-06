@@ -12,6 +12,9 @@ use Symfony\Component\HttpFoundation\Response;
  * Kepala sekolah tetap boleh membuka halaman & mengunduh laporan,
  * tetapi tidak dapat mengubah data.
  *
+ * Satu pengecualian: halaman kios buku tamu adalah halaman input murni,
+ * jadi GET-nya dijaga sendiri di KioskController (403 untuk kepsek).
+ *
  * Diterapkan ke seluruh grup route petugas, jadi cukup satu tempat.
  */
 class EnsureAdmin

@@ -24,7 +24,7 @@ import {
 
 export const NAV_ITEMS = [
     { label: 'Dashboard', routeName: 'dashboard', routeKey: 'dashboard', icon: LayoutDashboard },
-    { label: 'Buku Tamu', routeName: 'kiosk.*', routeKey: 'kiosk.index', icon: Tv, highlight: true },
+    { label: 'Buku Tamu', routeName: 'kiosk.*', routeKey: 'kiosk.index', icon: Tv, highlight: true, adminOnly: true },
     { label: 'Koleksi Buku', routeName: 'books.*', routeKey: 'books.index', icon: BookOpen },
     { label: 'Peminjaman', routeName: 'loans.*', routeKey: 'loans.index', icon: Repeat, exclude: ['loans.fines', 'loans.fines.excel'] },
     { label: 'Denda', routeKey: 'loans.fines', icon: Banknote, matchAll: ['loans.fines', 'loans.fines.excel'] },
@@ -158,6 +158,9 @@ export function isNavActive(item) {
 }
 
 function TopBar({ user, school, mobileOpen, setMobileOpen }) {
+    const { auth } = usePage().props;
+    const canManage = auth?.can_manage !== false;
+
     const navItems = useNavItems();
 
     return (
@@ -210,13 +213,15 @@ function TopBar({ user, school, mobileOpen, setMobileOpen }) {
                         })}
                     </nav>
                     <div className="hidden items-center gap-2 sm:flex">
-                        <Link
-                            href={route('kiosk.index')}
-                            className="inline-flex items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-xs font-semibold text-amber-800 transition hover:bg-amber-100 xl:hidden"
-                        >
-                            <Tv className="h-3.5 w-3.5" />
-                            Buku Tamu
-                        </Link>
+                        {canManage && (
+                            <Link
+                                href={route('kiosk.index')}
+                                className="inline-flex items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-xs font-semibold text-amber-800 transition hover:bg-amber-100 xl:hidden"
+                            >
+                                <Tv className="h-3.5 w-3.5" />
+                                Buku Tamu
+                            </Link>
+                        )}
 
                         <Dropdown>
                             <Dropdown.Trigger>

@@ -1,5 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Pagination from '@/Components/Pagination';
+import { CanManage } from '@/hooks/useCanManage';
 import { Badge, Card, EmptyState, Field, Input, PageHeader, cn } from '@/Components/ui';
 import { Head, router } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
@@ -178,14 +179,16 @@ export default function ReceiptsPage({ receipts, filters = {}, summary = {} }) {
                                             </span>
                                         </td>
                                         <td className="px-5 py-3 text-right">
-                                            <button
-                                                type="button"
-                                                onClick={() => window.open(route('loans.slip-fine', row.loan_id), '_blank')}
-                                                className="rounded-md p-1.5 text-slate-400 transition hover:bg-sky-50 hover:text-sky-600"
-                                                title="Cetak ulang"
-                                            >
-                                                <Printer className="h-4 w-4" />
-                                            </button>
+                                            <CanManage>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => window.open(route('loans.slip-fine', row.loan_id), '_blank')}
+                                                    className="rounded-md p-1.5 text-slate-400 transition hover:bg-sky-50 hover:text-sky-600"
+                                                    title="Cetak ulang"
+                                                >
+                                                    <Printer className="h-4 w-4" />
+                                                </button>
+                                            </CanManage>
                                         </td>
                                     </tr>
                                 ))}

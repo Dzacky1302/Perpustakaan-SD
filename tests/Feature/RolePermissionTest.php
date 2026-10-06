@@ -51,6 +51,40 @@ class RolePermissionTest extends TestCase
         $this->assertDatabaseCount('categories', 0);
     }
 
+    /**
+     * Buku tamu digital murni halaman input, bukan halaman laporan.
+     * Kepsek ditolak sejak GET, bukan baru ditolak waktu menyimpan —
+     * supaya tidak ada form yang terlanjur diisi lalu gagal di akhir.
+     */
+    public function test_kepsek_ditolak_membuka_buku_tamu(): void
+    {
+        $kepsek = $this->kepsek();
+
+        $this->actingAs($kepsek)->get('/kios')->assertForbidden();
+        $this->actingAs($kepsek)->get('/kios/siswa')->assertForbidden();
+    }
+
+    public function test_admin_bisa_membuka_buku_tamu(): void
+    {
+        $admin = $this->admin();
+
+        $this->actingAs($admin)->get('/kios')->assertOk();
+        $this->actingAs($admin)->get('/kios/siswa')->assertOk();
+    }
+
+    /**
+     * Halaman data tetap terbuka untuk kepsek (read-only) —
+     * yang hilang hanya tombol-tombol tulis di dalamnya.
+     */
+    public function test_kepsek_tetap_bisa_melihat_halaman_data(): void
+    {
+        $kepsek = $this->kepsek();
+
+        $this->actingAs($kepsek)->get('/categories')->assertOk();
+        $this->actingAs($kepsek)->get('/package-loans')->assertOk();
+        $this->actingAs($kepsek)->get('/loans/denda')->assertOk();
+    }
+
     public function test_kepsek_ditolak_kenaikan_kelas(): void
     {
         $kepsek = $this->kepsek();

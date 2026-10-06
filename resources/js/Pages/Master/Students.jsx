@@ -185,16 +185,18 @@ export default function StudentsIndex({ students, classrooms = [], filters = {} 
                             title="Belum ada data siswa"
                             description="Tambahkan satu per satu atau impor sekaligus dari berkas Excel."
                             action={
-                                <div className="flex flex-wrap items-center justify-center gap-2">
-                                    <Button type="button" onClick={openCreate}>
-                                        <Plus className="h-3.5 w-3.5" />
-                                        Tambah Siswa
-                                    </Button>
-                                    <Button variant="secondary" type="button" onClick={() => setShowImport(true)}>
-                                        <Upload className="h-3.5 w-3.5" />
-                                        Impor Excel
-                                    </Button>
-                                </div>
+                                <CanManage>
+                                    <div className="flex flex-wrap items-center justify-center gap-2">
+                                        <Button type="button" onClick={openCreate}>
+                                            <Plus className="h-3.5 w-3.5" />
+                                            Tambah Siswa
+                                        </Button>
+                                        <Button variant="secondary" type="button" onClick={() => setShowImport(true)}>
+                                            <Upload className="h-3.5 w-3.5" />
+                                            Impor Excel
+                                        </Button>
+                                    </div>
+                                </CanManage>
                             }
                         />
                     </div>

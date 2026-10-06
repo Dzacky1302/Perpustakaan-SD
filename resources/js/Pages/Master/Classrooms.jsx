@@ -146,10 +146,12 @@ export default function ClassroomsIndex({
                             title="Belum ada data kelas"
                             description="Tambahkan kelas sesuai rombongan belajar di sekolah."
                             action={
-                                <Button type="button" onClick={openCreate}>
-                                    <Plus className="h-3.5 w-3.5" />
-                                    Tambah Kelas
-                                </Button>
+                                <CanManage>
+                                    <Button type="button" onClick={openCreate}>
+                                        <Plus className="h-3.5 w-3.5" />
+                                        Tambah Kelas
+                                    </Button>
+                                </CanManage>
                             }
                         />
                     </div>

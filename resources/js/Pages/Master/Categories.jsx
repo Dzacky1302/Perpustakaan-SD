@@ -106,10 +106,12 @@ export default function CategoriesIndex({ categories = [], colors = [], totalBoo
                             title="Belum ada kategori"
                             description="Buat kategori seperti Buku Paket, Fiksi, atau Referensi."
                             action={
-                                <Button type="button" onClick={openCreate}>
-                                    <Plus className="h-3.5 w-3.5" />
-                                    Tambah Kategori
-                                </Button>
+                                <CanManage>
+                                    <Button type="button" onClick={openCreate}>
+                                        <Plus className="h-3.5 w-3.5" />
+                                        Tambah Kategori
+                                    </Button>
+                                </CanManage>
                             }
                         />
                     </div>
@@ -152,22 +154,24 @@ export default function CategoriesIndex({ categories = [], colors = [], totalBoo
                                         <td className="px-3 py-3 text-slate-600">{category.copies_sum} buku</td>
                                         <td className="px-5 py-3">
                                             <div className="flex items-center justify-end gap-1.5">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => openEdit(category)}
-                                                    className="rounded-md p-1.5 text-slate-400 transition hover:bg-sky-50 hover:text-sky-600"
-                                                    title="Ubah kategori"
-                                                >
-                                                    <Pencil className="h-4 w-4" />
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => remove(category)}
-                                                    className="rounded-md p-1.5 text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
-                                                    title="Hapus kategori"
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                </button>
+                                                <CanManage>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => openEdit(category)}
+                                                        className="rounded-md p-1.5 text-slate-400 transition hover:bg-sky-50 hover:text-sky-600"
+                                                        title="Ubah kategori"
+                                                    >
+                                                        <Pencil className="h-4 w-4" />
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => remove(category)}
+                                                        className="rounded-md p-1.5 text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
+                                                        title="Hapus kategori"
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </button>
+                                                </CanManage>
                                             </div>
                                         </td>
                                     </tr>

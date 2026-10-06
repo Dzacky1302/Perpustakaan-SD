@@ -19,9 +19,14 @@ class KioskController extends Controller
     /**
      * Mode kios layar sentuh: siswa memilih kelas, memilih nama,
      * lalu buku tamu terisi otomatis.
+     *
+     * Halaman ini murni halaman input, jadi kepsek (read-only) ditolak
+     * sejak GET pertama — bukan baru ditolak waktu menyimpan.
      */
     public function index(): Response
     {
+        $this->guard();
+
         return Inertia::render('Kiosk/Index', [
             'classrooms' => Classroom::forYear()
                 ->withCount('students')
@@ -45,6 +50,8 @@ class KioskController extends Controller
      */
     public function students(Request $request): JsonResponse
     {
+        $this->guard();
+
         $validated = $request->validate([
             'classroom_id' => ['nullable', 'integer', 'exists:classrooms,id'],
             'search' => ['nullable', 'string', 'max:60'],
@@ -127,6 +134,22 @@ class KioskController extends Controller
         $visit->delete();
 
         return back()->with('success', 'Catatan kunjungan dibatalkan.');
+    }
+
+    /**
+     * Buku tamu digital hanya untuk pustakawan.
+     *
+     * Penulisan (check-in & pembatalan) sudah dijaga middleware admin;
+     * bagian GET sengaja dijaga di sini karena kios bukan halaman laporan —
+     * kepsek tidak punya apa pun yang bisa dilakukan di dalamnya.
+     */
+    private function guard(): void
+    {
+        abort_unless(
+            request()->user()?->isAdmin() ?? false,
+            403,
+            'Buku tamu digital hanya untuk pustakawan.'
+        );
     }
 
     /**

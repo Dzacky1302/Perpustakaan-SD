@@ -51,11 +51,13 @@ Dua level, dijaga di sisi server lewat middleware:
 | Peran | Hak Akses |
 |---|---|
 | **Pustakawan** (`admin`) | Lihat, nambah, ubah, hapus, cetak, kelola cadangan |
-| **Kepala Sekolah** (`kepsek`) | Lihat semua halaman, cetak, unduh laporan. Nggak bisa ubah data. |
+| **Kepala Sekolah** (`kepsek`) | Lihat dashboard, data, laporan; cetak & unduh laporan. Nggak bisa ubah data. |
 
 Tombol yang nggak kepake disembunyiin di tampilan, tapi penjaganya beneran ada di server — coba `POST`/`PATCH`/`DELETE` langsung, ditolak **403**.
 
 Satu pengecualian yang sengaja dipersempit: **mencetak kuitansi denda** hanya boleh pustakawan. Kepsek tetap dapat 403, karena tiap cetakan menambah salinan resmi yang tercatat di arsip.
+
+**Buku Tamu (kios)** juga dipersempit: halaman ini murni input, bukan laporan, jadi kepsek sudah ditolak **403 sejak halaman dibuka** — bukan baru ditolak waktu menyimpan. Percuma nunjukin form tiga langkah yang isinya nggak bakal kesimpen.
 
 
 ## Screenshot
@@ -86,7 +88,7 @@ Satu pengecualian yang sengaja dipersempit: **mencetak kuitansi denda** hanya bo
 | Routing JS | Ziggy | Nama route PHP tersedia di React, jadi tidak ada path yang salah ketik |
 | PDF | DomPDF | Slip dan laporan ber-kop sekolah dicetak langsung dari PHP |
 | Excel | OpenSpout | Impor data siswa dan ekspor laporan, ringan untuk skala sekolah |
-| Testing | PHPUnit 11 | 105 feature test menutup logika bisnis dan hak akses |
+| Testing | PHPUnit 11 | 108 feature test menutup logika bisnis dan hak akses |
 
 ---
 
@@ -296,10 +298,11 @@ php artisan test --testdox                 # output lebih mudah dibaca
 php artisan test --filter Fine             # hanya test denda
 ```
 
-Status saat ini: **105 test, 399 assertion, semuanya lulus.**
+Status saat ini: **108 test, 406 assertion, semuanya lulus.**
 
 Cakupan test meliputi snapshot kelas saat siswa naik kelas, pembatasan role
-pustakawan dan kepala sekolah, perhitungan denda per hari sekolah (termasuk
+pustakawan dan kepala sekolah (termasuk halaman input yang ditolak 403),
+perhitungan denda per hari sekolah (termasuk
 akhir pekan, libur nasional, dan cuti bersama), konsistensi tarif antar layar,
 pembatasan percobaan login, slip PDF, kuitansi denda (dua versi, kode
 verifikasi, dan riwayat cetak per salinan), serta backup database termasuk
@@ -310,7 +313,7 @@ rotasi dan penolakan path traversal.
 Yang belum ada, aku tulis aja biar jelas:
 
 - **Belum ada REST API.** Semua masih server-rendered Inertia.
-- **Belum ada test frontend.** 105 test semuanya di sisi PHP, komponen React belum disentuh.
+- **Belum ada test frontend.** 108 test semuanya di sisi PHP, komponen React belum disentuh.
 - **Frontend masih JavaScript**, belum TypeScript.
 - **Belum ada halaman error** (404/500) dan belum ada error boundary di React.
 - **Backup cuma di storage lokal server.** Kalau perangkatnya rusak, filenya perlu disalin manual ke media lain.
