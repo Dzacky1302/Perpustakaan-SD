@@ -68,7 +68,12 @@ export default function AuthenticatedLayout({ header, children }) {
     };
 
     return (
-        <div className="flex min-h-screen flex-col bg-slate-100/70 text-slate-800 antialiased">
+        <div className="flex min-h-screen flex-col bg-slate-100/70 text-slate-800 antialiased xl:pl-64">
+            {/* Sidebar kiri (xl ke atas): daftar menu yang dulu nempel di
+                navbar atas, tampilannya sama persis dengan menu versi HP.
+                Di bawah xl, menu tetap lewat tombol hamburger. */}
+            <Sidebar user={user} school={school} />
+
             <TopBar
                 user={user}
                 school={school}
@@ -161,10 +166,8 @@ function TopBar({ user, school, mobileOpen, setMobileOpen }) {
     const { auth } = usePage().props;
     const canManage = auth?.can_manage !== false;
 
-    const navItems = useNavItems();
-
     return (
-        <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
+        <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur xl:hidden">
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                 <div className="flex h-16 items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
@@ -188,30 +191,6 @@ function TopBar({ user, school, mobileOpen, setMobileOpen }) {
                         </span>
                     </div>
 
-                    <nav className="hidden items-center gap-1 xl:flex">
-                        {navItems.map((item) => {
-                            const Icon = item.icon;
-                            const active = isNavActive(item);
-
-                            return (
-                                <Link
-                                    key={item.label}
-                                    href={route(item.routeKey)}
-                                    className={
-                                        'inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition ' +
-                                        (active
-                                            ? 'bg-emerald-50 text-emerald-700'
-                                            : item.highlight
-                                              ? 'border border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100'
-                                              : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900')
-                                    }
-                                >
-                                    <Icon className="h-4 w-4" />
-                                    {item.label}
-                                </Link>
-                            );
-                        })}
-                    </nav>
                     <div className="hidden items-center gap-2 sm:flex">
                         {canManage && (
                             <Link
@@ -271,6 +250,91 @@ function TopBar({ user, school, mobileOpen, setMobileOpen }) {
 }
 
 
+
+/**
+ * Sidebar kiri untuk layar lebar (xl ke atas).
+ *
+ * Isinya daftar menu yang SAMA PERSIS dengan menu versi HP (MobileMenu),
+ * jadi tampilan konsisten di semua ukuran layar — cuma dipindah dari
+ * navbar atas ke sebelah kiri. Di bawah xl komponen ini tidak dirender,
+ * dan menu dibuka lewat tombol hamburger seperti biasa.
+ */
+function Sidebar({ user, school }) {
+    const { auth } = usePage().props;
+    const navItems = useNavItems();
+
+    return (
+        <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-slate-200 bg-white xl:flex">
+            <div className="flex items-center gap-3 border-b border-slate-100 px-5 py-4">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white shadow-md shadow-emerald-600/20">
+                    <School className="h-5 w-5" />
+                </span>
+                <div className="min-w-0">
+                    <p className="truncate text-base font-extrabold leading-tight text-slate-900">
+                        Pustaka<span className="text-emerald-600">SD</span>
+                    </p>
+                    <p className="truncate text-[11px] text-slate-500">
+                        {school?.name ?? 'Perpustakaan Sekolah Dasar'}
+                    </p>
+                </div>
+            </div>
+
+            <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
+                {navItems.map((item) => {
+                    const Icon = item.icon;
+                    const active = isNavActive(item);
+
+                    return (
+                        <Link
+                            key={item.label}
+                            href={route(item.routeKey)}
+                            className={
+                                'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ' +
+                                (active
+                                    ? 'bg-emerald-50 text-emerald-700'
+                                    : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900')
+                            }
+                        >
+                            <Icon
+                                className={
+                                    'h-4 w-4 ' + (active ? 'text-emerald-600' : 'text-slate-400')
+                                }
+                            />
+                            {item.label}
+                        </Link>
+                    );
+                })}
+
+                <p className="px-3 pb-1 pt-4 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                    T.A. {school?.academic_year ?? '2025/2026'}
+                </p>
+            </nav>
+
+            <div className="border-t border-slate-100 px-3 py-3">
+                <p className="truncate px-3 pb-0.5 text-xs font-bold text-slate-800">
+                    {user?.name}
+                </p>
+                <p className="truncate px-3 pb-2 text-[11px] text-slate-400">
+                    {auth?.role_label ?? 'Petugas'}
+                </p>
+                <Link
+                    href={route('profile.edit')}
+                    className="block rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-slate-100"
+                >
+                    Profil Saya
+                </Link>
+                <Link
+                    href={route('logout')}
+                    method="post"
+                    as="button"
+                    className="w-full rounded-lg px-3 py-2 text-left text-sm text-rose-600 hover:bg-rose-50"
+                >
+                    Keluar
+                </Link>
+            </div>
+        </aside>
+    );
+}
 
 function MobileMenu({ onNavigate }) {
     const { auth } = usePage().props;

@@ -124,7 +124,7 @@ export default function StudentPortalIndex({
     const borrowQuota = student ? loanLimit - (student.active_loans ?? 0) : loanLimit;
 
     return (
-        <StudentLayout>
+        <StudentLayout steps={STEPS} step={step}>
             <Head title="Buku Tamu Digital" />
 
             {flash?.error && (
