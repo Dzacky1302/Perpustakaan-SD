@@ -192,7 +192,7 @@ export function NavLink({ item }) {
             className={
                 'relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-150 ' +
                 (active
-                    ? 'bg-emerald-50 font-semibold text-emerald-700 shadow-[inset_0_0_0_1px_theme(colors.emerald.200)]'
+                    ? 'bg-emerald-50 font-semibold text-emerald-700 shadow-[inset_0_0_0_1px_#a7f3d0]'
                     : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900')
             }
         >

@@ -12,6 +12,15 @@ import {
     TrendingUp,
     UserRound,
 } from 'lucide-react';
+import {
+    Area,
+    AreaChart,
+    CartesianGrid,
+    ResponsiveContainer,
+    Tooltip,
+    XAxis,
+    YAxis,
+} from 'recharts';
 
 const PURPOSE_META = {
     membaca: { label: 'Membaca', tone: 'emerald' },
@@ -19,6 +28,26 @@ const PURPOSE_META = {
     tugas: { label: 'Tugas', tone: 'violet' },
     lainnya: { label: 'Lainnya', tone: 'slate' },
 };
+
+function formatTrendDelta(value) {
+    if (value > 0) return `+${value} vs kemarin`;
+    if (value < 0) return `${value} vs kemarin`;
+    return 'Sama kayak kemarin';
+}
+
+function VisitsTooltip({ active, payload, label }) {
+    if (!active || !payload?.length) return null;
+    const day = payload[0]?.payload;
+
+    return (
+        <div className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs shadow-pop">
+            <p className="font-bold text-slate-800">{day?.fullDate ?? label}</p>
+            <p className="mt-0.5 font-semibold tabular-nums text-emerald-700">
+                {payload[0].value} kunjungan
+            </p>
+        </div>
+    );
+}
 
 export default function Dashboard({
     stats,
@@ -37,9 +66,26 @@ export default function Dashboard({
         year: 'numeric',
     });
 
-    const maxVisit = Math.max(1, ...visitsTrend.map((day) => day.total));
     const maxTopBook = Math.max(1, ...topBooks.map((book) => book.total));
     const maxClassroomVisit = Math.max(1, ...visitsByClassroom.map((row) => row.visits));
+
+    const chartData = visitsTrend.map((day) => ({
+        ...day,
+        fullDate: new Date(`${day.date}T00:00:00`).toLocaleDateString('id-ID', {
+            weekday: 'long',
+            day: 'numeric',
+            month: 'long',
+        }),
+    }));
+
+    const avgVisits = Math.round(
+        visitsTrend.reduce((total, day) => total + day.total, 0) / Math.max(1, visitsTrend.length),
+    );
+
+    // Delta kunjungan hari ini vs kemarin (2 titik terakhir tren).
+    const lastDay = visitsTrend[visitsTrend.length - 1]?.total ?? 0;
+    const prevDay = visitsTrend[visitsTrend.length - 2]?.total ?? 0;
+    const visitsDelta = lastDay - prevDay;
 
     const statusTone = (status) =>
         status === 'dipinjam' ? 'amber' : status === 'kembali' ? 'emerald' : 'rose';
@@ -74,6 +120,7 @@ export default function Dashboard({
                     label="Kunjungan Hari Ini"
                     value={stats.visits_today}
                     hint={`${stats.visits_month} kunjungan bulan ini`}
+                    trend={formatTrendDelta(visitsDelta)}
                     icon={CalendarCheck}
                     tone="emerald"
                 />
@@ -81,6 +128,7 @@ export default function Dashboard({
                     label="Peminjaman Aktif"
                     value={stats.loans_active}
                     hint={`${stats.loans_overdue} terlambat dikembalikan`}
+                    trend={stats.loans_overdue > 0 ? `${stats.loans_overdue} telat` : 'Aman'}
                     icon={BookMarked}
                     tone={stats.loans_overdue > 0 ? 'rose' : 'sky'}
                 />
@@ -109,30 +157,58 @@ export default function Dashboard({
                     action={
                         <Badge tone="emerald">
                             <TrendingUp className="h-3 w-3" />
-                            Rata-rata{' '}
-                            {Math.round(
-                                visitsTrend.reduce((total, day) => total + day.total, 0) /
-                                    Math.max(1, visitsTrend.length),
-                            )}{' '}
-                            siswa/hari
+                            Rata-rata {avgVisits} siswa/hari
                         </Badge>
                     }
                 >
-                    <div className="flex h-48 items-end gap-1.5">
-                        {visitsTrend.map((day) => (
-                            <div key={day.date} className="group flex flex-1 flex-col items-center gap-1.5">
-                                <span className="text-[10px] font-bold text-slate-400 opacity-0 transition group-hover:opacity-100">
-                                    {day.total}
-                                </span>
-                                <div
-                                    className="w-full rounded-t-md bg-gradient-to-t from-emerald-600 to-teal-400 transition group-hover:from-emerald-700"
-                                    style={{ height: `${Math.max(4, (day.total / maxVisit) * 100)}%` }}
-                                    title={`${day.total} kunjungan`}
-                                />
-                                <span className="text-[9px] font-medium text-slate-500">{day.label}</span>
-                            </div>
-                        ))}
-                    </div>
+                    {chartData.length === 0 ? (
+                        <EmptyState
+                            icon={TrendingUp}
+                            title="Belum ada data kunjungan"
+                            description="Grafik muncul otomatis setelah ada kunjungan tercatat."
+                            compact
+                        />
+                    ) : (
+                        <div className="h-48 w-full">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <AreaChart data={chartData} margin={{ top: 4, right: 4, bottom: 0, left: -18 }}>
+                                    <defs>
+                                        <linearGradient id="visitsFill" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="0%" stopColor="#059669" stopOpacity={0.35} />
+                                            <stop offset="100%" stopColor="#059669" stopOpacity={0.02} />
+                                        </linearGradient>
+                                    </defs>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                                    <XAxis
+                                        dataKey="label"
+                                        tick={{ fontSize: 9, fill: '#64748b' }}
+                                        tickLine={false}
+                                        axisLine={{ stroke: '#e2e8f0' }}
+                                        interval="preserveStartEnd"
+                                        minTickGap={16}
+                                    />
+                                    <YAxis
+                                        allowDecimals={false}
+                                        tick={{ fontSize: 9, fill: '#64748b' }}
+                                        tickLine={false}
+                                        axisLine={false}
+                                        width={36}
+                                    />
+                                    <Tooltip content={<VisitsTooltip />} cursor={{ stroke: '#059669', strokeDasharray: '4 4' }} />
+                                    <Area
+                                        type="monotone"
+                                        dataKey="total"
+                                        name="Kunjungan"
+                                        stroke="#059669"
+                                        strokeWidth={2.5}
+                                        fill="url(#visitsFill)"
+                                        dot={false}
+                                        activeDot={{ r: 4, fill: '#059669', stroke: '#fff', strokeWidth: 2 }}
+                                    />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        </div>
+                    )}
                 </Card>
 
                 <Card title="Buku Paling Sering Dipinjam" subtitle="5 judul teratas">
