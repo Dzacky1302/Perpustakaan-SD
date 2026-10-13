@@ -7,7 +7,8 @@
         "dev": "vite"
     },
     "dependencies": {
-        "lucide-react": "^1.48.0"
+        "lucide-react": "^1.48.0",
+        "recharts": "^2.15.0"
     },
     "devDependencies": {
         "@headlessui/react": "^2.2.10",
