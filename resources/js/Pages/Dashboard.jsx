@@ -1,5 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Badge, Card, EmptyState, PageHeader, StatCard } from '@/Components/ui';
+import { Badge, Card, EmptyState, PageHeader, StatCard, TableWrapper } from '@/Components/ui';
 import { CanManage } from '@/hooks/useCanManage';
 import { Head, Link } from '@inertiajs/react';
 import {
@@ -10,7 +10,6 @@ import {
     Library,
     LibraryBig,
     TrendingUp,
-    Tv,
     UserRound,
 } from 'lucide-react';
 
@@ -52,16 +51,9 @@ export default function Dashboard({
                     title="Dashboard Perpustakaan"
                     subtitle={`Rekapitulasi aktivitas perpustakaan — ${today}`}
                 >
-                    {/* Kedua tombol ini menuju halaman INPUT (buku tamu kios
-                        & formulir portal siswa), jadi hanya untuk pustakawan. */}
+                    {/* Tombol "Buka Buku Tamu" sengaja tidak ditampilkan karena
+                        menu Buku Tamu sudah dihapus dari navigasi. */}
                     <CanManage>
-                        <Link
-                            href={route('kiosk.index')}
-                            className="inline-flex items-center gap-1.5 rounded-lg bg-amber-500 px-3.5 py-2 text-xs font-bold text-white transition hover:bg-amber-600"
-                        >
-                            <Tv className="h-4 w-4" />
-                            Buka Buku Tamu
-                        </Link>
                         <Link
                             href={route('peminjaman.index')}
                             target="_blank"
@@ -297,83 +289,109 @@ export default function Dashboard({
                     className="lg:col-span-3"
                     title="Peminjaman Terbaru"
                     subtitle="8 transaksi terakhir dicatat"
-                    bodyClass="overflow-x-auto"
+                    bodyClass="p-0"
                 >
-                    <table className="w-full text-left text-xs">
-                        <thead className="bg-slate-50 text-[10px] uppercase tracking-wide text-slate-500">
-                            <tr>
-                                <th className="px-5 py-2.5 font-bold">Siswa</th>
-                                <th className="px-3 py-2.5 font-bold">Buku</th>
-                                <th className="px-3 py-2.5 font-bold">Pinjam</th>
-                                <th className="px-5 py-2.5 font-bold">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100">
-                            {recentLoans.map((loan) => (
-                                <tr key={loan.id} className="hover:bg-slate-50/70">
-                                    <td className="px-5 py-2.5">
-                                        <p className="font-semibold text-slate-800">{loan.student}</p>
-                                        <p className="text-[10px] text-slate-500">{loan.classroom}</p>
-                                    </td>
-                                    <td className="max-w-[220px] truncate px-3 py-2.5 text-slate-600">
-                                        {loan.book}
-                                    </td>
-                                    <td className="px-3 py-2.5 text-slate-500">{loan.borrowed_at}</td>
-                                    <td className="px-5 py-2.5">
-                                        {loan.is_overdue ? (
-                                            <Badge tone="rose">Terlambat</Badge>
-                                        ) : (
-                                            <Badge tone={statusTone(loan.status)}>
-                                                {loan.status === 'dipinjam'
-                                                    ? 'Dipinjam'
-                                                    : loan.status === 'kembali'
-                                                      ? 'Kembali'
-                                                      : 'Hilang'}
-                                            </Badge>
-                                        )}
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                    {recentLoans.length === 0 ? (
+                        <div className="p-5">
+                            <EmptyState
+                                icon={BookMarked}
+                                title="Belum ada peminjaman"
+                                description="Transaksi peminjaman terbaru akan muncul di sini."
+                            />
+                        </div>
+                    ) : (
+                        <TableWrapper>
+                            <table className="w-full min-w-[620px] text-left text-xs">
+                                <thead className="bg-slate-50 text-[10px] uppercase tracking-wide text-slate-500">
+                                    <tr>
+                                        <th className="px-5 py-2.5 font-bold">Siswa</th>
+                                        <th className="px-3 py-2.5 font-bold">Buku</th>
+                                        <th className="px-3 py-2.5 font-bold">Pinjam</th>
+                                        <th className="px-5 py-2.5 font-bold">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-100">
+                                    {recentLoans.map((loan) => (
+                                        <tr key={loan.id} className="hover:bg-slate-50/70">
+                                            <td className="px-5 py-2.5">
+                                                <p className="font-semibold text-slate-800">{loan.student}</p>
+                                                <p className="text-[10px] text-slate-500">{loan.classroom}</p>
+                                            </td>
+                                            <td className="max-w-[220px] truncate px-3 py-2.5 text-slate-600">
+                                                {loan.book}
+                                            </td>
+                                            <td className="whitespace-nowrap px-3 py-2.5 text-slate-500">{loan.borrowed_at}</td>
+                                            <td className="whitespace-nowrap px-5 py-2.5">
+                                                {loan.is_overdue ? (
+                                                    <Badge tone="rose" dot>
+                                                        Terlambat
+                                                    </Badge>
+                                                ) : (
+                                                    <Badge tone={statusTone(loan.status)} dot>
+                                                        {loan.status === 'dipinjam'
+                                                            ? 'Dipinjam'
+                                                            : loan.status === 'kembali'
+                                                              ? 'Kembali'
+                                                              : 'Hilang'}
+                                                    </Badge>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </TableWrapper>
+                    )}
                 </Card>
             </div>
 
 
             <Card
-                className="mt-4"
-                title="Kunjungan Bulan Ini per Kelas"
-                subtitle="Perbandingan aktivitas kunjungan tiap rombongan belajar"
-                bodyClass="p-0"
-            >
-                <table className="w-full text-left text-xs">
-                    <thead className="bg-slate-50 text-[10px] uppercase tracking-wide text-slate-500">
-                        <tr>
-                            <th className="px-5 py-2.5 font-bold">Kelas</th>
-                            <th className="px-3 py-2.5 font-bold">Jumlah Siswa</th>
-                            <th className="px-3 py-2.5 font-bold">Kunjungan</th>
-                            <th className="px-5 py-2.5 font-bold">Proporsi</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                        {visitsByClassroom.map((row) => (
-                            <tr key={row.id} className="hover:bg-slate-50/70">
-                                <td className="px-5 py-2.5 font-bold text-slate-800">{row.name}</td>
-                                <td className="px-3 py-2.5 text-slate-600">{row.students} siswa</td>
-                                <td className="px-3 py-2.5 font-semibold text-emerald-700">{row.visits}x</td>
-                                <td className="px-5 py-2.5">
-                                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
-                                        <div
-                                            className="h-full rounded-full bg-teal-500"
-                                            style={{ width: `${(row.visits / maxClassroomVisit) * 100}%` }}
-                                        />
-                                    </div>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </Card>
+                    className="mt-4"
+                    title="Kunjungan Bulan Ini per Kelas"
+                    subtitle="Perbandingan aktivitas kunjungan tiap rombongan belajar"
+                    bodyClass="p-0"
+                >
+                    {visitsByClassroom.length === 0 ? (
+                        <div className="p-5">
+                            <EmptyState
+                                icon={UserRound}
+                                title="Belum ada kunjungan bulan ini"
+                                description="Data muncul otomatis setelah siswa mengisi formulir kunjungan."
+                            />
+                        </div>
+                    ) : (
+                        <TableWrapper>
+                            <table className="w-full min-w-[560px] text-left text-xs">
+                                <thead className="bg-slate-50 text-[10px] uppercase tracking-wide text-slate-500">
+                                    <tr>
+                                        <th className="px-5 py-2.5 font-bold">Kelas</th>
+                                        <th className="px-3 py-2.5 font-bold">Jumlah Siswa</th>
+                                        <th className="px-3 py-2.5 font-bold">Kunjungan</th>
+                                        <th className="px-5 py-2.5 font-bold">Proporsi</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-100">
+                                    {visitsByClassroom.map((row) => (
+                                        <tr key={row.id} className="hover:bg-slate-50/70">
+                                            <td className="px-5 py-2.5 font-bold text-slate-800">{row.name}</td>
+                                            <td className="whitespace-nowrap px-3 py-2.5 text-slate-600">{row.students} siswa</td>
+                                            <td className="whitespace-nowrap px-3 py-2.5 font-semibold text-emerald-700">{row.visits}x</td>
+                                            <td className="px-5 py-2.5">
+                                                <div className="h-1.5 w-full min-w-[120px] overflow-hidden rounded-full bg-slate-100">
+                                                    <div
+                                                        className="h-full rounded-full bg-teal-500"
+                                                        style={{ width: `${(row.visits / maxClassroomVisit) * 100}%` }}
+                                                    />
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </TableWrapper>
+                    )}
+                </Card>
 
             <p className="mt-4 text-center text-[11px] text-slate-400">
                 Data diperbarui otomatis setiap kali halaman ini dimuat.
