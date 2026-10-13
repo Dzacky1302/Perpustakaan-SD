@@ -1,3 +1,35 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Fase A polish: fondasi visual konsisten untuk seluruh dashboard. */
+@layer base {
+    body {
+        @apply bg-slate-100/70 text-slate-800 antialiased;
+        text-rendering: optimizeLegibility;
+    }
+
+    ::selection {
+        @apply bg-emerald-200/70 text-emerald-950;
+    }
+
+    :focus-visible {
+        outline: 2px solid theme('colors.emerald.500');
+        outline-offset: 2px;
+    }
+}
+
+@layer utilities {
+    .no-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+    .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+    .table-sticky-head thead th {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+}
