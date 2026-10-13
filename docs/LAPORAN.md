@@ -14,12 +14,14 @@
 
 ## 2. Ringkasan Pekerjaan
 
-| Fase | Branch | Tanggal | Hasil |
+| Fase | Branch / PR | Tanggal merge | Hasil |
 |---|---|---|---|
-| A — Design system (`ui.jsx`, CSS, Tailwind) | `polish/ui-system` | ... | Palet dikunci, komponen konsisten |
-| B — Layout & navigasi | `polish/layout-nav` | ... | Sidebar berkelompok, toast rapi |
-| C — Dashboard responsif | `polish/dashboard-charts` | ... | Tabel aman di HP, empty state |
-| D — Error page + docs | `polish/error-pages-docs` | ... | Error page ID, CHANGELOG, laporan |
+| A — Design system (`ui.jsx`, CSS, Tailwind) | `polish/ui-system` | 2026-10-13 | Palet dikunci, komponen konsisten |
+| B — Layout & navigasi | `polish/layout-nav` | 2026-10-13 | Sidebar berkelompok, toast rapi |
+| C — Dashboard responsif | `polish/dashboard-charts` | 2026-10-13 | Tabel aman di HP, empty state |
+| D — Error page + docs | `polish/error-pages-docs` | 2026-10-13 | Error page ID, CHANGELOG, laporan |
+| Sesi 1 — Chart Recharts + trend | `feat/dashboard-chart` | 2026-10-13 | AreaChart + tooltip, StatCard trend, Modal/Dropdown slate |
+| Sesi 2 — Typo + screenshot + README | `docs/sesi2` | 2026-10-13 | Fix "Kelas Kelas", 4 PNG, TODO tutup |
 
 ## 3. Sebelum vs Sesudah
 

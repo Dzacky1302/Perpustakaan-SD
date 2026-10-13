@@ -165,7 +165,7 @@ export default function ReportsIndex({ filters = {}, classrooms = [], academicYe
                             <option value="">Semua kelas</option>
                             {classrooms.map((classroom) => (
                                 <option key={classroom.id} value={classroom.id}>
-                                    Kelas {classroom.name} ({classroom.students_count} siswa)
+                                    {classroom.name} ({classroom.students_count} siswa)
                                 </option>
                             ))}
                         </Select>

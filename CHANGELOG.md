@@ -3,7 +3,13 @@
 Semua perubahan penting proyek ini dicatat di sini, mengikuti format
 [Keep a Changelog](https://keepachangelog.com/id/1.1.0/).
 
-## [Unreleased]
+## [1.1.0] - 2026-10-13
+
+### Ditambahkan
+
+- Grafik tren kunjungan memakai Recharts (`AreaChart` + tooltip tanggal `id-ID`).
+- Trend di `StatCard` kunjungan (`+X vs kemarin`) dan peminjaman (`N telat` / `Aman`).
+- Screenshot asli di `docs/`: dashboard, laporan, halaman depan, peminjaman.
 
 ### Ditambahkan
 
