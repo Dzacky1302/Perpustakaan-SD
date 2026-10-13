@@ -313,9 +313,10 @@ Yang belum ada, aku tulis aja biar jelas:
 - **Belum ada REST API.** Semua masih server-rendered Inertia.
 - **Belum ada test frontend.** 108 test semuanya di sisi PHP, komponen React belum disentuh.
 - **Frontend masih JavaScript**, belum TypeScript.
-- **Belum ada halaman error** (404/500) dan belum ada error boundary di React.
+- **Halaman error Inertia** (`Error.jsx`) sudah ada untuk 404 & gangguan server
+  dalam bahasa Indonesia, tapi **error boundary React** masih belum ada — kalau
+  komponen React crash total, layar bisa kosong.
 - **Backup cuma di storage lokal server.** Kalau perangkatnya rusak, filenya perlu disalin manual ke media lain.
-- **Riwayat git masih tipis.** Repo ini di-upload sekaligus, jadi nggak kelihatan prosesnya dari awal.
 
 ## Lisensi
 
