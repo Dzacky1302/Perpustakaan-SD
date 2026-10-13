@@ -13,29 +13,54 @@ import {
     LayoutDashboard,
     LibraryBig,
     Menu,
-    Receipt,
     Repeat,
     School,
     Tag,
-    Tv,
     Users,
     X,
 } from 'lucide-react';
 
-export const NAV_ITEMS = [
-    { label: 'Dashboard', routeName: 'dashboard', routeKey: 'dashboard', icon: LayoutDashboard },
-    { label: 'Buku Tamu', routeName: 'kiosk.*', routeKey: 'kiosk.index', icon: Tv, highlight: true, adminOnly: true },
-    { label: 'Koleksi Buku', routeName: 'books.*', routeKey: 'books.index', icon: BookOpen },
-    { label: 'Peminjaman', routeName: 'loans.*', routeKey: 'loans.index', icon: Repeat, exclude: ['loans.fines', 'loans.fines.excel'] },
-    { label: 'Denda', routeKey: 'loans.fines', icon: Banknote, matchAll: ['loans.fines', 'loans.fines.excel'] },
-    { label: 'Kuitansi', routeName: 'receipts.*', routeKey: 'receipts.index', icon: Receipt, adminOnly: true },
-    { label: 'Buku Paket', routeName: 'package-loans.*', routeKey: 'package-loans.index', icon: LibraryBig },
-    { label: 'Siswa', routeName: 'students.*', routeKey: 'students.index', icon: Users },
-    { label: 'Kelas', routeName: 'classrooms.*', routeKey: 'classrooms.index', icon: Layers },
-    { label: 'Kategori', routeName: 'categories.*', routeKey: 'categories.index', icon: Tag },
-    { label: 'Laporan', routeName: 'reports.*', routeKey: 'reports.index', icon: FileSpreadsheet },
-    { label: 'Cadangan', routeName: 'backups.*', routeKey: 'backups.index', icon: DatabaseBackup, adminOnly: true },
+export const NAV_GROUPS = [
+    {
+        title: 'Utama',
+        items: [{ label: 'Dashboard', routeName: 'dashboard', routeKey: 'dashboard', icon: LayoutDashboard }],
+    },
+    {
+        title: 'Sirkulasi',
+        items: [
+            { label: 'Koleksi Buku', routeName: 'books.*', routeKey: 'books.index', icon: BookOpen },
+            { label: 'Peminjaman', routeName: 'loans.*', routeKey: 'loans.index', icon: Repeat, exclude: ['loans.fines', 'loans.fines.excel'] },
+            { label: 'Denda', routeKey: 'loans.fines', icon: Banknote, matchAll: ['loans.fines', 'loans.fines.excel'] },
+            { label: 'Buku Paket', routeName: 'package-loans.*', routeKey: 'package-loans.index', icon: LibraryBig },
+        ],
+    },
+    {
+        title: 'Data Master',
+        items: [
+            { label: 'Siswa', routeName: 'students.*', routeKey: 'students.index', icon: Users },
+            { label: 'Kelas', routeName: 'classrooms.*', routeKey: 'classrooms.index', icon: Layers },
+            { label: 'Kategori', routeName: 'categories.*', routeKey: 'categories.index', icon: Tag },
+        ],
+    },
+    {
+        title: 'Sistem',
+        items: [
+            { label: 'Laporan', routeName: 'reports.*', routeKey: 'reports.index', icon: FileSpreadsheet },
+            { label: 'Cadangan', routeName: 'backups.*', routeKey: 'backups.index', icon: DatabaseBackup, adminOnly: true },
+        ],
+    },
 ];
+
+export const NAV_ITEMS = NAV_GROUPS.flatMap((group) => group.items);
+
+export function useNavGroups() {
+    const { auth } = usePage().props;
+
+    return NAV_GROUPS.map((group) => ({
+        ...group,
+        items: group.items.filter((item) => !item.adminOnly || auth?.can_manage !== false),
+    })).filter((group) => group.items.length > 0);
+}
 
 export default function AuthenticatedLayout({ header, children }) {
     const { auth, flash, school } = usePage().props;
@@ -59,6 +84,8 @@ export default function AuthenticatedLayout({ header, children }) {
 
         return () => clearTimeout(timer);
     }, [toast]);
+
+    const dismissToast = () => setToast(null);
 
     const toastStyles = {
         success: 'bg-emerald-50 border-emerald-200 text-emerald-900',
@@ -84,26 +111,37 @@ export default function AuthenticatedLayout({ header, children }) {
             {toast && (
                 <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div
+                        role="status"
                         className={
-                            'mt-4 flex items-center justify-between gap-3 rounded-xl border p-3.5 text-sm font-medium shadow-sm ' +
+                            'mt-4 animate-fade-up overflow-hidden rounded-xl border text-sm font-medium shadow-card ' +
                             (toastStyles[toast.type] ?? toastStyles.info)
                         }
                     >
-                        <span className="flex items-center gap-2.5">
-                            {toast.type === 'success' ? (
-                                <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" />
-                            ) : (
-                                <AlertCircle className="h-5 w-5 shrink-0 text-rose-600" />
-                            )}
-                            {toast.text}
-                        </span>
-                        <button
-                            type="button"
-                            onClick={() => setToast(null)}
-                            className="rounded-md p-1 text-slate-400 transition hover:text-slate-600"
-                        >
-                            <X className="h-4 w-4" />
-                        </button>
+                        <div className="flex items-center justify-between gap-3 p-3.5">
+                            <span className="flex min-w-0 items-center gap-2.5">
+                                {toast.type === 'success' ? (
+                                    <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" />
+                                ) : (
+                                    <AlertCircle className="h-5 w-5 shrink-0 text-rose-600" />
+                                )}
+                                <span className="truncate">{toast.text}</span>
+                            </span>
+                            <button
+                                type="button"
+                                onClick={dismissToast}
+                                aria-label="Tutup notifikasi"
+                                className="rounded-md p-1 text-slate-400 transition hover:bg-white/60 hover:text-slate-600"
+                            >
+                                <X className="h-4 w-4" />
+                            </button>
+                        </div>
+                        <div className="h-0.5 w-full bg-slate-900/5">
+                            <div
+                                key={toast.text}
+                                className="h-full origin-left bg-current opacity-30"
+                                style={{ animation: 'toast-progress 6s linear forwards' }}
+                            />
+                        </div>
                     </div>
                 </div>
             )}
@@ -141,6 +179,28 @@ export function useNavItems() {
     const { auth } = usePage().props;
 
     return NAV_ITEMS.filter((item) => !item.adminOnly || auth?.can_manage !== false);
+}
+
+export function NavLink({ item }) {
+    const Icon = item.icon;
+    const active = isNavActive(item);
+
+    return (
+        <Link
+            href={route(item.routeKey)}
+            aria-current={active ? 'page' : undefined}
+            className={
+                'relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-150 ' +
+                (active
+                    ? 'bg-emerald-50 font-semibold text-emerald-700 shadow-[inset_0_0_0_1px_theme(colors.emerald.200)]'
+                    : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900')
+            }
+        >
+            {active && <span className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-emerald-500" aria-hidden="true" />}
+            <Icon className={'h-4 w-4 shrink-0 ' + (active ? 'text-emerald-600' : 'text-slate-400')} />
+            {item.label}
+        </Link>
+    );
 }
 
 /**
@@ -192,16 +252,6 @@ function TopBar({ user, school, mobileOpen, setMobileOpen }) {
                     </div>
 
                     <div className="hidden items-center gap-2 sm:flex">
-                        {canManage && (
-                            <Link
-                                href={route('kiosk.index')}
-                                className="inline-flex items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-xs font-semibold text-amber-800 transition hover:bg-amber-100 xl:hidden"
-                            >
-                                <Tv className="h-3.5 w-3.5" />
-                                Buku Tamu
-                            </Link>
-                        )}
-
                         <Dropdown>
                             <Dropdown.Trigger>
                                 <button
@@ -261,7 +311,7 @@ function TopBar({ user, school, mobileOpen, setMobileOpen }) {
  */
 function Sidebar({ user, school }) {
     const { auth } = usePage().props;
-    const navItems = useNavItems();
+    const navGroups = useNavGroups();
 
     return (
         <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-slate-200 bg-white xl:flex">
@@ -270,7 +320,7 @@ function Sidebar({ user, school }) {
                     <School className="h-5 w-5" />
                 </span>
                 <div className="min-w-0">
-                    <p className="truncate text-base font-extrabold leading-tight text-slate-900">
+                    <p className="truncate text-base font-extrabold leading-tight tracking-tight text-slate-900">
                         Pustaka<span className="text-emerald-600">SD</span>
                     </p>
                     <p className="truncate text-[11px] text-slate-500">
@@ -279,33 +329,21 @@ function Sidebar({ user, school }) {
                 </div>
             </div>
 
-            <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
-                {navItems.map((item) => {
-                    const Icon = item.icon;
-                    const active = isNavActive(item);
+            <nav className="flex-1 space-y-4 overflow-y-auto px-3 py-4" aria-label="Navigasi utama">
+                {navGroups.map((group) => (
+                    <div key={group.title}>
+                        <p className="px-3 pb-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                            {group.title}
+                        </p>
+                        <div className="space-y-0.5">
+                            {group.items.map((item) => (
+                                <NavLink key={item.label} item={item} />
+                            ))}
+                        </div>
+                    </div>
+                ))}
 
-                    return (
-                        <Link
-                            key={item.label}
-                            href={route(item.routeKey)}
-                            className={
-                                'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ' +
-                                (active
-                                    ? 'bg-emerald-50 text-emerald-700'
-                                    : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900')
-                            }
-                        >
-                            <Icon
-                                className={
-                                    'h-4 w-4 ' + (active ? 'text-emerald-600' : 'text-slate-400')
-                                }
-                            />
-                            {item.label}
-                        </Link>
-                    );
-                })}
-
-                <p className="px-3 pb-1 pt-4 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                <p className="px-3 pb-1 pt-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">
                     T.A. {school?.academic_year ?? '2025/2026'}
                 </p>
             </nav>
@@ -319,7 +357,7 @@ function Sidebar({ user, school }) {
                 </p>
                 <Link
                     href={route('profile.edit')}
-                    className="block rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-slate-100"
+                    className="block rounded-lg px-3 py-2 text-sm text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
                 >
                     Profil Saya
                 </Link>
@@ -327,7 +365,7 @@ function Sidebar({ user, school }) {
                     href={route('logout')}
                     method="post"
                     as="button"
-                    className="w-full rounded-lg px-3 py-2 text-left text-sm text-rose-600 hover:bg-rose-50"
+                    className="w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-rose-600 transition hover:bg-rose-50"
                 >
                     Keluar
                 </Link>
@@ -338,29 +376,41 @@ function Sidebar({ user, school }) {
 
 function MobileMenu({ onNavigate }) {
     const { auth } = usePage().props;
-    const navItems = useNavItems();
+    const navGroups = useNavGroups();
 
     return (
-        <div className="space-y-1 border-t border-slate-200 bg-white px-4 pb-4 pt-3 xl:hidden">
-            {navItems.map((item) => {
-                const Icon = item.icon;
-                const active = isNavActive(item);
+        <div className="animate-fade-up space-y-4 border-t border-slate-200 bg-white px-4 pb-4 pt-3 xl:hidden">
+            {navGroups.map((group) => (
+                <div key={group.title}>
+                    <p className="px-3 pb-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                        {group.title}
+                    </p>
+                    <div className="space-y-0.5">
+                        {group.items.map((item) => {
+                            const Icon = item.icon;
+                            const active = isNavActive(item);
 
-                return (
-                    <Link
-                        key={item.label}
-                        href={route(item.routeKey)}
-                        onClick={onNavigate}
-                        className={
-                            'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium ' +
-                            (active ? 'bg-emerald-50 text-emerald-700' : 'text-slate-600 hover:bg-slate-100')
-                        }
-                    >
-                        <Icon className="h-4 w-4" />
-                        {item.label}
-                    </Link>
-                );
-            })}
+                            return (
+                                <Link
+                                    key={item.label}
+                                    href={route(item.routeKey)}
+                                    onClick={onNavigate}
+                                    aria-current={active ? 'page' : undefined}
+                                    className={
+                                        'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ' +
+                                        (active
+                                            ? 'bg-emerald-50 font-semibold text-emerald-700'
+                                            : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900')
+                                    }
+                                >
+                                    <Icon className={'h-4 w-4 shrink-0 ' + (active ? 'text-emerald-600' : 'text-slate-400')} />
+                                    {item.label}
+                                </Link>
+                            );
+                        })}
+                    </div>
+                </div>
+            ))}
 
             <div className="mt-2 border-t border-slate-200 pt-3">
                 <p className="px-3 pb-1 text-xs font-bold uppercase tracking-wider text-slate-400">
