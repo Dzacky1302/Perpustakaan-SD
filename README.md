@@ -62,17 +62,15 @@ Satu pengecualian yang sengaja dipersempit: **mencetak kuitansi denda** hanya bo
 
 ## Screenshot
 
-> **TODO: ganti pakai tangkapan layar asli.**
-> Taruh gambarnya di folder `docs/`, lalu arahin kayak gini: `![Dashboard](docs/dashboard.png)`.
-> Saran: Dashboard, Kios Buku Tamu, Peminjaman, sama Laporan.
+> Tangkapan layar asli dari aplikasi berjalan (data contoh hasil seeder).
 
-| Dashboard | Buku Tamu (Kios) |
+| Dashboard | Laporan |
 |---|---|
-| ![Dashboard](docs/dashboard.png) | ![Kios](docs/kiosk.png) |
+| ![Dashboard](docs/dashboard.png) | ![Laporan](docs/laporan.png) |
 
-| Peminjaman | Laporan |
+| Halaman Depan | Peminjaman |
 |---|---|
-| ![Peminjaman](docs/peminjaman.png) | ![Laporan](docs/laporan.png) |
+| ![Halaman Depan](docs/welcome.png) | ![Peminjaman](docs/peminjaman.png) |
 
 ---
 

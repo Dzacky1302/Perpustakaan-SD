@@ -174,7 +174,7 @@ export default function PackageLoansIndex({
                         <Select value={selected?.id ?? ''} onChange={(event) => changeClassroom(event.target.value)}>
                             {classrooms.map((classroom) => (
                                 <option key={classroom.id} value={classroom.id}>
-                                    Kelas {classroom.name} • {classroom.students_count} siswa •{' '}
+                                    {classroom.name} • {classroom.students_count} siswa •{' '}
                                     {classroom.academic_year}
                                 </option>
                             ))}
