@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 use App\Http\Controllers\BackupController;
 use App\Http\Controllers\BookController;
@@ -33,7 +33,7 @@ Route::get('/', function () {
 | pilih buku. Tanggal dan jam dicatat otomatis oleh sistem.
 */
 Route::get('/peminjaman', [StudentPortalController::class, 'index'])->name('peminjaman.index');
-Route::get('/peminjaman/siswa', [StudentPortalController::class, 'students'])->name('peminjaman.students');
+Route::get('/peminjaman/siswa', [StudentPortalController::class, 'students'])->name('peminjaman.students')->middleware('auth');
 Route::post('/peminjaman', [StudentPortalController::class, 'store'])->name('peminjaman.store');
 
 Route::middleware(['auth', 'verified', 'admin'])->group(function () {

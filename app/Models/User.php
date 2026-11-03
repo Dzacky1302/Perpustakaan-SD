@@ -61,7 +61,9 @@ class User extends Authenticatable
      */
     public function isAdmin(): bool
     {
-        return $this->role !== self::ROLE_KEPSEK;
+        // HANYA role 'admin' yang boleh menulis data
+        // 'kepsek' hanya boleh baca & unduh laporan
+        return $this->role === self::ROLE_ADMIN;
     }
 
     public function isKepsek(): bool
