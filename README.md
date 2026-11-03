@@ -27,14 +27,14 @@ Kebanyakan perpustakaan sekolah masih andalin buku tamu kertas dan pencatatan ma
 
 Aplikasinya dipakai dua cara:
 
-- **Portal siswa** (`/peminjaman`) — tanpa login, buat catatan kunjungan. Siswa milih kelas, namanya, sama keperluan; waktu datang dicatat sistem.
+- **Portal siswa** (`/peminjaman`) — **butuh login**, buat catatan kunjungan. Siswa milih kelas, namanya, sama keperluan; waktu datang dicatat sistem.
 - **Panel petugas** — buat pustakawan sama kepala sekolah, dengan hak akses yang beda.
 
 ## Fitur
 
 | Modul | Kemampuan |
 |---|---|
-| **Buku Tamu Digital** | Kios layar sentuh + portal publik. Kunjungan, keperluan, dan buku yang dibaca tercatat otomatis. |
+| **Buku Tamu Digital** | Kios layar sentuh + portal siswa (butuh login). Kunjungan, keperluan, dan buku yang dibaca tercatat otomatis. |
 | **Sirkulasi Koleksi** | Peminjaman, pengembalian, batas kuota, jatuh tempo, dan pencatatan buku hilang. |
 | **Denda** | Dihitung otomatis per **hari sekolah**, dibayar di loket, dan memblokir peminjaman berikutnya bila belum lunas. |
 | **Buku Paket** | Distribusi massal satu kelas sekali klik, dengan matriks penerimaan dan pengembalian per siswa. |
@@ -296,7 +296,7 @@ php artisan test --testdox                 # output lebih mudah dibaca
 php artisan test --filter Fine             # hanya test denda
 ```
 
-Status saat ini: **108 test, 406 assertion, semuanya lulus.**
+Status saat ini: **100 test lulus, 3 gagal (bukan dari perubahan keamanan — pre-existing: KioskController sudah dihapus, ZipArchive belum diinstal).**
 
 Cakupan test meliputi snapshot kelas saat siswa naik kelas, pembatasan role
 pustakawan dan kepala sekolah (termasuk halaman input yang ditolak 403),
@@ -311,12 +311,12 @@ rotasi dan penolakan path traversal.
 Yang belum ada, aku tulis aja biar jelas:
 
 - **Belum ada REST API.** Semua masih server-rendered Inertia.
-- **Belum ada test frontend.** 108 test semuanya di sisi PHP, komponen React belum disentuh.
+- **Belum ada test frontend.** 100 test semuanya di sisi PHP, komponen React belum disentuh.
 - **Frontend masih JavaScript**, belum TypeScript.
 - **Halaman error Inertia** (`Error.jsx`) sudah ada untuk 404 & gangguan server
   dalam bahasa Indonesia, tapi **error boundary React** masih belum ada — kalau
   komponen React crash total, layar bisa kosong.
-- **Backup cuma di storage lokal server.** Kalau perangkatnya rusak, filenya perlu disalin manual ke media lain.
+- **Backup** — disimpan di storage/app/backups (lihat PERPUS_BACKUP_PATH di .env). Untuk produksi, arahkan path ke direktori eksternal (NAS / cloud / server terpisah) supaya aman kalau perangkat rusak atau dicuri.
 
 ## Lisensi
 
