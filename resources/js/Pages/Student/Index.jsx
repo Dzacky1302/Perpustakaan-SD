@@ -40,7 +40,8 @@ export default function StudentPortalIndex({
     const searchRef = useRef(null);
 
     const { data, setData, post, processing, reset } = useForm({
-        student_id: '',
+        student_name: '',
+        nisn: '',
         purpose: '',
         book_id: '',
         loan_days: String(loanDays),
@@ -300,7 +301,8 @@ export default function StudentPortalIndex({
                                     type="button"
                                     onClick={() => {
                                         setStudent(item);
-                                        setData('student_id', item.id);
+                                        setData('student_name', item.name);
+                                        setData('nisn', item.nisn);
                                         setStep(3);
                                     }}
                                     className="rounded-xl border border-slate-200 bg-white px-3 py-3 text-left transition hover:border-emerald-400 hover:bg-emerald-50"
