@@ -2,7 +2,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import BorrowModal from '@/Components/BorrowModal';
 import Modal from '@/Components/Modal';
 import Pagination from '@/Components/Pagination';
-import { Badge, Button, Card, EmptyState, Field, Input, PageHeader, Select, cn } from '@/Components/ui';
+import { Badge, Button, Card, EmptyState, Field, Input, PageHeader, Select, StatCard, cn } from '@/Components/ui';
 import { Head, router, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 import { CanManage } from '@/hooks/useCanManage';
@@ -40,7 +40,9 @@ export default function DailyLoansIndex({ loans, filters = {}, summary, students
         to: filters.to ?? '',
     });
     const [returning, setReturning] = useState(null);
-    const [borrowing, setBorrowing] = useState(false);
+    // Dashboard memakai ?action=catat supaya tombol "Catat Peminjaman"
+    // benar-benar membuka formulir, bukan sekadar membuka halaman.
+    const [borrowing, setBorrowing] = useState(filters.action === 'catat');
 
     const returnForm = useForm({ returned_at: today, notes: '' });
 
@@ -109,7 +111,7 @@ export default function DailyLoansIndex({ loans, filters = {}, summary, students
                                 <Banknote className="h-3.5 w-3.5" />
                                 Denda
                                 {summary?.fine_unpaid > 0 && (
-                                    <span className="rounded-full bg-rose-600 px-1.5 py-0.5 text-[10px] text-white">
+                                    <span className="rounded-full bg-rose-600 px-1.5 py-0.5 text-xs text-white">
                                         {summary.fine_unpaid_label}
                                     </span>
                                 )}
@@ -120,34 +122,20 @@ export default function DailyLoansIndex({ loans, filters = {}, summary, students
         >
             <Head title="Peminjaman Harian" />
 
-            <div className="mb-4 grid grid-cols-2 gap-4 lg:grid-cols-4">
-                <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                    <p className="text-[11px] font-bold uppercase text-slate-500">Sedang Dipinjam</p>
-                    <p className="mt-1 text-xl font-extrabold text-slate-900">{summary?.active ?? 0}</p>
-                </div>
-                <div className="rounded-2xl border border-rose-200 bg-rose-50/60 p-4">
-                    <p className="text-[11px] font-bold uppercase text-rose-700">Terlambat</p>
-                    <p className="mt-1 text-xl font-extrabold text-rose-700">{summary?.overdue ?? 0}</p>
-                </div>
-                <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                    <p className="text-[11px] font-bold uppercase text-slate-500">Dipinjam Hari Ini</p>
-                    <p className="mt-1 text-xl font-extrabold text-sky-700">{summary?.borrowed_today ?? 0}</p>
-                </div>
-                <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                    <p className="text-[11px] font-bold uppercase text-slate-500">Kembali Hari Ini</p>
-                    <p className="mt-1 text-xl font-extrabold text-emerald-700">
-                        {summary?.returned_today ?? 0}
-                    </p>
-                </div>
-                <div className="rounded-2xl border border-amber-200 bg-amber-50/60 p-4">
-                    <p className="text-[11px] font-bold uppercase text-amber-700">Denda Belum Dibayar</p>
-                    <p className="mt-1 text-xl font-extrabold text-amber-700">
-                        {summary?.fine_unpaid_label ?? 'Rp0'}
-                    </p>
-                    <p className="mt-1 text-[11px] text-amber-600">
-                        {summary?.students_blocked ?? 0} siswa diblokir
-                    </p>
-                </div>
+            <div className="mb-4 grid grid-cols-2 gap-4 lg:grid-cols-5">
+                <StatCard label="Sedang Dipinjam" value={summary?.active ?? 0} icon={BookMarked} tone="slate" />
+                <StatCard label="Terlambat" value={summary?.overdue ?? 0} icon={CalendarClock} tone="rose" valueTone="rose" />
+                <StatCard label="Dipinjam Hari Ini" value={summary?.borrowed_today ?? 0} icon={BookOpen} tone="sky" valueTone="sky" />
+                <StatCard label="Kembali Hari Ini" value={summary?.returned_today ?? 0} icon={CheckCircle2} tone="emerald" valueTone="emerald" />
+                <StatCard
+                    label="Denda Belum Dibayar"
+                    value={summary?.fine_unpaid_label ?? 'Rp0'}
+                    valueSize="text-lg sm:text-xl"
+                    hint={`${summary?.students_blocked ?? 0} siswa diblokir`}
+                    icon={Banknote}
+                    tone="amber"
+                    valueTone="amber"
+                />
             </div>
             <Card bodyClass="p-0">
                 <div className="flex flex-wrap items-center gap-2 border-b border-slate-100 px-5 py-3.5">
@@ -157,7 +145,7 @@ export default function DailyLoansIndex({ loans, filters = {}, summary, students
                             type="button"
                             onClick={() => applyFilters({ status: tab.value })}
                             className={cn(
-                                'rounded-lg px-3 py-1.5 text-[11px] font-bold transition',
+                                'rounded-lg px-3 py-1.5 text-xs font-bold transition',
                                 filterState.status === tab.value
                                     ? 'bg-slate-900 text-white'
                                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200',
@@ -177,7 +165,7 @@ export default function DailyLoansIndex({ loans, filters = {}, summary, students
                 >
                     <Field label="Cari Siswa / Buku" className="lg:col-span-4">
                         <div className="relative">
-                            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
                             <Input
                                 value={filterState.search}
                                 onChange={(event) =>
@@ -233,7 +221,7 @@ export default function DailyLoansIndex({ loans, filters = {}, summary, students
                     <>
                         <div role="region" aria-label="Tabel peminjaman" tabIndex={0} className="w-full overflow-x-auto">
                             <table className="w-full text-left text-xs">
-                                <thead className="bg-slate-50 text-[10px] uppercase tracking-wide text-slate-500">
+                                <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
                                     <tr>
                                         <th className="px-4 py-2.5 font-bold">Siswa</th>
                                         <th className="px-3 py-2.5 font-bold">Buku</th>
@@ -253,13 +241,13 @@ export default function DailyLoansIndex({ loans, filters = {}, summary, students
                                         >
                                             <td className="px-4 py-2.5">
                                                 <p className="truncate font-bold text-slate-800 max-w-[9rem]">{loan.student}</p>
-                                                <p className="truncate text-[10px] text-slate-500 max-w-[13rem]">
+                                                <p className="truncate text-xs text-slate-500 max-w-[13rem]">
                                                     {loan.classroom ?? 'Tidak tercatat'}
                                                 </p>
                                             </td>
                                             <td className="px-3 py-2.5">
                                                 <p className="truncate font-semibold text-slate-700 max-w-[13rem]">{loan.book}</p>
-                                                <p className="truncate font-mono text-[10px] text-slate-400 max-w-[13rem]">
+                                                <p className="truncate font-mono text-xs text-slate-500 max-w-[13rem]">
                                                     {loan.book_code}
                                                 </p>
                                             </td>
@@ -283,7 +271,7 @@ export default function DailyLoansIndex({ loans, filters = {}, summary, students
                                                         <span className="font-bold text-rose-700">
                                                             {loan.fine_label}
                                                         </span>
-                                                        <p className="text-[10px] text-slate-400">
+                                                        <p className="text-xs text-slate-500">
                                                             {loan.fine_paid ? (
                                                                 <span className="text-emerald-600">Lunas</span>
                                                             ) : (
@@ -317,7 +305,7 @@ export default function DailyLoansIndex({ loans, filters = {}, summary, students
                                                     <Badge tone="slate">Hilang</Badge>
                                                 )}
                                                 {loan.notes && (
-                                                    <p className="mt-1 max-w-[180px] text-[10px] italic text-slate-400">
+                                                    <p className="mt-1 max-w-[180px] text-xs italic text-slate-500">
                                                         {loan.notes}
                                                     </p>
                                                 )}
@@ -327,7 +315,7 @@ export default function DailyLoansIndex({ loans, filters = {}, summary, students
                                                     <button
                                                         type="button"
                                                         onClick={() => window.open(route('loans.slip', loan.id), '_blank')}
-                                                        className="rounded-md p-1.5 text-slate-400 transition hover:bg-sky-50 hover:text-sky-600"
+                                                        className="rounded-md p-1.5 text-slate-500 transition hover:bg-sky-50 hover:text-sky-600"
                                                         title="Cetak surat peminjaman"
                                                     >
                                                         <Printer className="h-4 w-4" />
@@ -336,7 +324,7 @@ export default function DailyLoansIndex({ loans, filters = {}, summary, students
                                                         <button
                                                             type="button"
                                                             onClick={() => window.open(route('loans.slip-return', loan.id), '_blank')}
-                                                            className="rounded-md p-1.5 text-slate-400 transition hover:bg-sky-50 hover:text-sky-600"
+                                                            className="rounded-md p-1.5 text-slate-500 transition hover:bg-sky-50 hover:text-sky-600"
                                                             title="Cetak surat pengembalian"
                                                         >
                                                             <FileText className="h-4 w-4" />
@@ -362,7 +350,7 @@ export default function DailyLoansIndex({ loans, filters = {}, summary, students
                                                                 <button
                                                                     type="button"
                                                                     onClick={() => markLost(loan)}
-                                                                    className="rounded-md p-1.5 text-slate-400 transition hover:bg-amber-50 hover:text-amber-600"
+                                                                    className="rounded-md p-1.5 text-slate-500 transition hover:bg-amber-50 hover:text-amber-600"
                                                                     title="Tandai hilang"
                                                                 >
                                                                     <AlertOctagon className="h-4 w-4" />
@@ -372,7 +360,7 @@ export default function DailyLoansIndex({ loans, filters = {}, summary, students
                                                         <button
                                                             type="button"
                                                             onClick={() => remove(loan)}
-                                                            className="rounded-md p-1.5 text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
+                                                            className="rounded-md p-1.5 text-slate-500 transition hover:bg-rose-50 hover:text-rose-600"
                                                             title="Hapus catatan"
                                                         >
                                                             <Trash2 className="h-4 w-4" />
@@ -405,7 +393,7 @@ export default function DailyLoansIndex({ loans, filters = {}, summary, students
                         <button
                             type="button"
                             onClick={() => setReturning(null)}
-                            className="rounded-md p-1.5 text-slate-400 hover:bg-slate-100"
+                            className="rounded-md p-1.5 text-slate-500 hover:bg-slate-100"
                         >
                             <X className="h-4 w-4" />
                         </button>

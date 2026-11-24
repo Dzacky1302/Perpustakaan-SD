@@ -33,7 +33,7 @@ class DailyLoanController extends Controller
 
     public function index(Request $request): Response
     {
-        $filters = $request->only('status', 'search', 'from', 'to');
+        $filters = $request->only('status', 'search', 'from', 'to', 'action');
         $status = $filters['status'] ?? 'aktif';
 
         $loans = $this->filteredQuery($status, $filters)
@@ -68,6 +68,7 @@ class DailyLoanController extends Controller
                 'search' => $filters['search'] ?? '',
                 'from' => $filters['from'] ?? '',
                 'to' => $filters['to'] ?? '',
+                'action' => $filters['action'] ?? '',
             ],
             'summary' => [
                 'active' => DailyLoan::active()->count(),

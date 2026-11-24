@@ -34,7 +34,7 @@ export default function StudentLayout({ children, steps = [], step = null }) {
                         <p className="truncate text-sm font-extrabold leading-tight">
                             {school?.library ?? 'Perpustakaan Sekolah'}
                         </p>
-                        <p className="truncate text-[11px] text-emerald-100">{school?.name}</p>
+                        <p className="truncate text-xs text-emerald-100">{school?.name}</p>
                     </div>
                 </div>
 
@@ -51,16 +51,16 @@ export default function StudentLayout({ children, steps = [], step = null }) {
                                     className={
                                         'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium ' +
                                         (current
-                                            ? 'bg-white/15 text-white'
+                                            ? 'bg-emerald-800 text-white'
                                             : done
-                                              ? 'text-emerald-50'
-                                              : 'text-emerald-200/70')
+                                              ? 'text-white'
+                                              : 'text-emerald-100')
                                     }
                                 >
                                     <span
                                         className={
-                                            'flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ' +
-                                            (current ? 'bg-white text-emerald-700' : 'bg-white/15')
+                                            'flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ' +
+                                            (current ? 'bg-white text-emerald-800' : 'bg-emerald-800')
                                         }
                                     >
                                         {done ? <CheckCircle2 className="h-3.5 w-3.5" /> : number}
@@ -79,7 +79,7 @@ export default function StudentLayout({ children, steps = [], step = null }) {
                             minute: '2-digit',
                         })}
                     </p>
-                    <p className="text-[11px] capitalize text-emerald-100">
+                    <p className="text-xs capitalize text-emerald-100">
                         {now.toLocaleDateString('id-ID', {
                             weekday: 'long',
                             day: 'numeric',
@@ -100,7 +100,7 @@ export default function StudentLayout({ children, steps = [], step = null }) {
                             <p className="text-base font-extrabold leading-tight">
                                 {school?.library ?? 'Perpustakaan Sekolah'}
                             </p>
-                            <p className="text-[11px] text-emerald-100">{school?.name}</p>
+                            <p className="text-xs text-emerald-100">{school?.name}</p>
                         </div>
                     </div>
 
@@ -111,7 +111,7 @@ export default function StudentLayout({ children, steps = [], step = null }) {
                                 minute: '2-digit',
                             })}
                         </p>
-                        <p className="text-[11px] capitalize text-emerald-100">
+                        <p className="text-xs capitalize text-emerald-100">
                             {now.toLocaleDateString('id-ID', {
                                 weekday: 'long',
                                 day: 'numeric',
@@ -125,7 +125,7 @@ export default function StudentLayout({ children, steps = [], step = null }) {
 
             <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-6 sm:px-6">{children}</main>
 
-            <footer className="border-t border-slate-200 bg-white py-3 text-center text-[11px] text-slate-500">
+            <footer className="border-t border-slate-200 bg-white py-3 text-center text-xs text-slate-500">
                 {school?.name} • {school?.address}
             </footer>
         </div>

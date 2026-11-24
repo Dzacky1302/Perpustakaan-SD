@@ -1,4 +1,5 @@
 import Dropdown from '@/Components/Dropdown';
+import { academicYear } from '@/constants/academic';
 import { Link, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import {
@@ -150,7 +151,7 @@ export default function AuthenticatedLayout({ header, children }) {
                                 type="button"
                                 onClick={dismissToast}
                                 aria-label="Tutup notifikasi"
-                                className="rounded-md p-1 text-slate-400 transition hover:bg-white/60 hover:text-slate-600"
+                                className="rounded-md p-1 text-slate-500 transition hover:bg-white/60 hover:text-slate-600"
                             >
                                 <X aria-hidden="true" className="h-4 w-4" />
                             </button>
@@ -186,8 +187,8 @@ export default function AuthenticatedLayout({ header, children }) {
                         <strong className="text-slate-700">{school?.name ?? 'Perpustakaan SD'}</strong> — Sistem
                         Informasi Perpustakaan Sekolah
                     </p>
-                    <p className="text-slate-400">
-                        NPSN {school?.npsn ?? '-'} • Tahun Ajaran {school?.academic_year ?? '2025/2026'}
+                    <p className="text-slate-600">
+                        NPSN {school?.npsn ?? '-'} • Tahun Ajaran {school?.academic_year ?? academicYear()}
                     </p>
                 </div>
             </footer>
@@ -220,7 +221,7 @@ export function NavLink({ item }) {
             }
         >
             {active && <span className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-emerald-500" aria-hidden="true" />}
-            <Icon className={'h-4 w-4 shrink-0 ' + (active ? 'text-emerald-600' : 'text-slate-400')} />
+            <Icon className={'h-4 w-4 shrink-0 ' + (active ? 'text-emerald-600' : 'text-slate-500')} />
             {item.label}
         </Link>
     );
@@ -262,15 +263,15 @@ function TopBar({ user, school, mobileOpen, setMobileOpen }) {
                                 <span className="flex items-center gap-1 text-base font-extrabold tracking-tight text-slate-900 sm:text-lg">
                                     Pustaka<span className="text-emerald-600">SD</span>
                                 </span>
-                                <span className="hidden max-w-[220px] truncate text-[11px] text-slate-500 sm:block">
+                                <span className="hidden max-w-[220px] truncate text-xs text-slate-500 sm:block">
                                     {school?.name ?? 'Perpustakaan Sekolah Dasar'}
                                 </span>
                             </span>
                         </Link>
 
                         <span className="ml-3 hidden items-center gap-1.5 border-l border-slate-200 pl-4 text-xs text-slate-500 lg:flex">
-                            <Calendar className="h-3.5 w-3.5 text-slate-400" />
-                            T.A. <strong className="text-slate-700">{school?.academic_year ?? '2025/2026'}</strong>
+                            <Calendar className="h-3.5 w-3.5 text-slate-500" />
+                            T.A. <strong className="text-slate-700">{school?.academic_year ?? academicYear()}</strong>
                         </span>
                     </div>
 
@@ -285,7 +286,7 @@ function TopBar({ user, school, mobileOpen, setMobileOpen }) {
                                         {user?.name?.charAt(0) ?? 'P'}
                                     </span>
                                     <span className="max-w-[120px] truncate">{user?.name}</span>
-                                    <svg className="h-3.5 w-3.5 text-slate-400" viewBox="0 0 20 20" fill="currentColor">
+                                    <svg className="h-3.5 w-3.5 text-slate-500" viewBox="0 0 20 20" fill="currentColor">
                                         <path
                                             fillRule="evenodd"
                                             d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
@@ -346,7 +347,7 @@ function Sidebar({ user, school }) {
                     <p className="truncate text-base font-extrabold leading-tight tracking-tight text-slate-900">
                         Pustaka<span className="text-emerald-600">SD</span>
                     </p>
-                    <p className="truncate text-[11px] text-slate-500">
+                    <p className="truncate text-xs text-slate-500">
                         {school?.name ?? 'Perpustakaan Sekolah Dasar'}
                     </p>
                 </div>
@@ -355,7 +356,7 @@ function Sidebar({ user, school }) {
             <nav className="flex-1 space-y-4 overflow-y-auto px-3 py-4" aria-label="Navigasi utama">
                 {navGroups.map((group) => (
                     <div key={group.title}>
-                        <p className="px-3 pb-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                        <p className="px-3 pb-1.5 text-xs font-bold uppercase tracking-widest text-slate-600">
                             {group.title}
                         </p>
                         <div className="space-y-0.5">
@@ -366,8 +367,8 @@ function Sidebar({ user, school }) {
                     </div>
                 ))}
 
-                <p className="px-3 pb-1 pt-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                    T.A. {school?.academic_year ?? '2025/2026'}
+                <p className="px-3 pb-1 pt-2 text-xs font-bold uppercase tracking-widest text-slate-600">
+                    T.A. {school?.academic_year ?? academicYear()}
                 </p>
             </nav>
 
@@ -375,7 +376,7 @@ function Sidebar({ user, school }) {
                 <p className="truncate px-3 pb-0.5 text-xs font-bold text-slate-800">
                     {user?.name}
                 </p>
-                <p className="truncate px-3 pb-2 text-[11px] text-slate-400">
+                <p className="truncate px-3 pb-2 text-xs text-slate-600">
                     {auth?.role_label ?? 'Petugas'}
                 </p>
                 <Link
@@ -405,7 +406,7 @@ function MobileMenu({ onNavigate }) {
         <div className="animate-fade-up space-y-4 border-t border-slate-200 bg-white px-4 pb-4 pt-3 xl:hidden">
             {navGroups.map((group) => (
                 <div key={group.title}>
-                    <p className="px-3 pb-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                    <p className="px-3 pb-1.5 text-xs font-bold uppercase tracking-widest text-slate-600">
                         {group.title}
                     </p>
                     <div className="space-y-0.5">
@@ -426,7 +427,7 @@ function MobileMenu({ onNavigate }) {
                                             : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900')
                                     }
                                 >
-                                    <Icon className={'h-4 w-4 shrink-0 ' + (active ? 'text-emerald-600' : 'text-slate-400')} />
+                                    <Icon className={'h-4 w-4 shrink-0 ' + (active ? 'text-emerald-600' : 'text-slate-500')} />
                                     {item.label}
                                 </Link>
                             );
@@ -436,7 +437,7 @@ function MobileMenu({ onNavigate }) {
             ))}
 
             <div className="mt-2 border-t border-slate-200 pt-3">
-                <p className="px-3 pb-1 text-xs font-bold uppercase tracking-wider text-slate-400">
+                <p className="px-3 pb-1 text-xs font-bold uppercase tracking-wider text-slate-600">
                     {auth?.user?.name}
                 </p>
                 <Link

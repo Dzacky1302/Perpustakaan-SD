@@ -1,5 +1,6 @@
 import StudentLayout from '@/Layouts/StudentLayout';
 import { Badge, Button, Card, EmptyState, Input, cn } from '@/Components/ui';
+import { VISIT_PURPOSES } from '@/constants/visits';
 import { Head, useForm, usePage } from '@inertiajs/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -18,10 +19,10 @@ const STEPS = ['Kelas', 'Nama', 'NISN', 'Tujuan', 'Buku'];
 
 const LOAN_OPTIONS = [3, 7, 14, 30];
 
-const PURPOSES = [
-    { value: 'membaca', label: 'Membaca di Tempat', description: 'Buku tetap di perpustakaan', icon: BookOpen },
-    { value: 'pinjam', label: 'Meminjam Buku', description: 'Bawa pulang ke rumah', icon: SmilePlus },
-];
+const PURPOSES = VISIT_PURPOSES.map((purpose) => ({
+    ...purpose,
+    icon: purpose.value === 'membaca' ? BookOpen : SmilePlus,
+}));
 
 export default function StudentPortalIndex({
     classrooms = [],
@@ -189,7 +190,7 @@ export default function StudentPortalIndex({
                     <h1 className="text-2xl font-extrabold tracking-tight text-slate-900">
                         Buku Tamu Digital
                     </h1>
-                    <p className="mt-1 text-sm text-slate-500">
+                    <p className="mt-1 text-sm text-slate-600">
                         Pilih kelas, namamu, keperluan, dan buku yang kamu baca atau pinjam.
                     </p>
                 </div>
@@ -213,18 +214,22 @@ export default function StudentPortalIndex({
                                     className={cn(
                                         'flex h-8 w-8 items-center justify-center rounded-full text-xs font-extrabold',
                                         finished
-                                            ? 'bg-emerald-500 text-white'
+                                            ? 'bg-emerald-800 text-white'
                                             : active
-                                              ? 'bg-emerald-600 text-white'
-                                              : 'bg-slate-200 text-slate-500',
+                                              ? 'bg-emerald-800 text-white'
+                                              : 'bg-slate-200 text-slate-700',
                                     )}
                                 >
-                                    {finished ? <CheckCircle2 className="h-4 w-4" /> : number}
+                                    {finished ? (
+                                        <CheckCircle2 className="h-4 w-4" strokeWidth={3} aria-hidden="true" />
+                                    ) : (
+                                        number
+                                    )}
                                 </span>
                                 <span
                                     className={cn(
-                                        'hidden text-[11px] font-bold sm:block',
-                                        active ? 'text-slate-800' : 'text-slate-400',
+                                        'hidden text-xs font-bold sm:block',
+                                        active ? 'text-slate-900' : 'text-slate-600',
                                     )}
                                 >
                                     {label}
@@ -306,7 +311,7 @@ export default function StudentPortalIndex({
                                 <span className="block text-xl font-extrabold text-slate-800">
                                     {item.name}
                                 </span>
-                                <span className="mt-0.5 block text-[11px] text-slate-500">
+                                <span className="mt-0.5 block text-xs text-slate-500">
                                     {item.students_count} siswa
                                 </span>
                             </button>
@@ -331,7 +336,7 @@ export default function StudentPortalIndex({
                     <search className="relative mb-3">
                         <Search
                             aria-hidden="true"
-                            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+                            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500"
                         />
                         <Input
                             ref={searchRef}
@@ -391,11 +396,11 @@ export default function StudentPortalIndex({
                 <Card>
                     <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
                         <div>
-                            <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-700">
+                            <p className="text-xs font-bold uppercase tracking-wide text-emerald-700">
                                 Nama yang dipilih
                             </p>
                             <p className="text-sm font-extrabold text-slate-900">{student?.name}</p>
-                            <p className="text-[11px] text-slate-600">
+                            <p className="text-xs text-slate-600">
                                 Kelas {classroom?.name} • sisa kuota {borrowQuota} dari {loanLimit}
                             </p>
                         </div>
@@ -411,7 +416,7 @@ export default function StudentPortalIndex({
                         >
                             Masukkan NISN untuk verifikasi
                         </label>
-                        <p id="portal-nisn-help" className="mb-3 text-[11px] text-slate-500">
+                        <p id="portal-nisn-help" className="mb-3 text-xs text-slate-500">
                             Ketik 10 angka NISN milikmu. NISN harus cocok dengan nama yang
                             dipilih, supaya data yang tercatat benar-benar milik siswa ini.
                         </p>
@@ -480,10 +485,10 @@ export default function StudentPortalIndex({
                 <Card>
                     <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
                         <div>
-                            <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">
+                            <p className="text-xs font-bold uppercase tracking-wide text-slate-600">
                                 {student?.name} • {classroom?.name}
                             </p>
-                            <p className="mt-0.5 flex items-center gap-1.5 text-[11px] font-semibold text-emerald-700">
+                            <p className="mt-0.5 flex items-center gap-1.5 text-xs font-semibold text-emerald-700">
                                 <CheckCircle2 className="h-3.5 w-3.5" />
                                 NISN cocok
                             </p>
@@ -517,7 +522,7 @@ export default function StudentPortalIndex({
                                         <span className="block text-base font-extrabold text-slate-800">
                                             {item.label}
                                         </span>
-                                        <span className="block text-[11px] text-slate-500">
+                                        <span className="block text-xs text-slate-500">
                                             {item.description}
                                         </span>
                                     </span>
@@ -534,7 +539,7 @@ export default function StudentPortalIndex({
                     <Card>
                         <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
                             <div>
-                                <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">
+                                <p className="text-xs font-bold uppercase tracking-wide text-slate-600">
                                     {student?.name} • {classroom?.name}
                                 </p>
                                 <p className="text-sm font-extrabold text-slate-900">
@@ -542,7 +547,7 @@ export default function StudentPortalIndex({
                                         ? 'Pilih buku yang mau dipinjam'
                                         : 'Pilih buku yang mau dibaca'}
                                 </p>
-                                <p className="text-[11px] text-slate-500">
+                                <p className="text-xs text-slate-600">
                                     {data.purpose === 'pinjam'
                                         ? `Pinjaman ${data.loan_days || loanDays} hari. Sisa kuota ${borrowQuota} dari ${loanLimit}.`
                                         : 'Buku tetap di perpustakaan, boleh dikosongkan.'}
@@ -556,7 +561,7 @@ export default function StudentPortalIndex({
                         <search className="relative mb-3">
                             <Search
                                 aria-hidden="true"
-                                className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+                                className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500"
                             />
                             <Input
                                 type="search"
@@ -599,7 +604,7 @@ export default function StudentPortalIndex({
                                             <span className="block text-sm font-bold text-slate-800">
                                                 {book.title}
                                             </span>
-                                            <span className="block text-[11px] text-slate-500">
+                                            <span className="block text-xs text-slate-500">
                                                 {book.author}
                                             </span>
                                             <span className="mt-1.5 flex flex-wrap gap-1.5">
@@ -628,7 +633,7 @@ export default function StudentPortalIndex({
                         <div className="mt-4 grid gap-3 sm:grid-cols-2">
                             {data.purpose === 'pinjam' && (
                                 <div>
-                                    <p className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-600">
+                                    <p className="mb-1 block text-xs font-bold uppercase tracking-wide text-slate-600">
                                         Lama Pinjam
                                     </p>
                                     <div className="grid grid-cols-4 gap-2">
@@ -649,7 +654,7 @@ export default function StudentPortalIndex({
                                                 <span className="block text-sm font-extrabold text-slate-800">
                                                     {days}
                                                 </span>
-                                                <span className="text-[10px] text-slate-500">hari</span>
+                                                <span className="text-xs text-slate-600">hari</span>
                                             </button>
                                         ))}
                                     </div>
@@ -657,7 +662,7 @@ export default function StudentPortalIndex({
                             )}
 
                             <div>
-                                <p className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-600">
+                                <p className="mb-1 block text-xs font-bold uppercase tracking-wide text-slate-600">
                                     Catatan (opsional)
                                 </p>
                                 <Input

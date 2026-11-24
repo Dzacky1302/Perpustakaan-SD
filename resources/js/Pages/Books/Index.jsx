@@ -10,6 +10,7 @@ import {
     Input,
     PageHeader,
     Select,
+    StatCard,
     cn,
 } from '@/Components/ui';
 import { Head, router, useForm } from '@inertiajs/react';
@@ -18,6 +19,7 @@ import { CanManage } from '@/hooks/useCanManage';
 import {
     BookOpen,
     Download,
+    Layers,
     Library,
     Package,
     Pencil,
@@ -155,26 +157,10 @@ export default function BooksIndex({ books, categories = [], filters = {}, summa
             <Head title="Katalog Buku" />
 
             <div className="mb-4 grid grid-cols-2 gap-4 lg:grid-cols-4">
-                <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                    <p className="text-[11px] font-bold uppercase text-slate-500">Total Judul</p>
-                    <p className="mt-1 text-xl font-extrabold text-slate-900">{summary?.titles ?? 0}</p>
-                </div>
-                <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                    <p className="text-[11px] font-bold uppercase text-slate-500">Total Eksemplar</p>
-                    <p className="mt-1 text-xl font-extrabold text-emerald-700">{summary?.copies ?? 0}</p>
-                </div>
-                <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                    <p className="text-[11px] font-bold uppercase text-slate-500">Judul Buku Paket</p>
-                    <p className="mt-1 text-xl font-extrabold text-amber-600">
-                        {summary?.package_titles ?? 0}
-                    </p>
-                </div>
-                <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                    <p className="text-[11px] font-bold uppercase text-slate-500">Judul Koleksi</p>
-                    <p className="mt-1 text-xl font-extrabold text-sky-700">
-                        {summary?.collection_titles ?? 0}
-                    </p>
-                </div>
+                <StatCard label="Total Judul" value={summary?.titles ?? 0} icon={Library} tone="slate" />
+                <StatCard label="Total Eksemplar" value={summary?.copies ?? 0} icon={BookOpen} tone="emerald" valueTone="emerald" />
+                <StatCard label="Judul Buku Paket" value={summary?.package_titles ?? 0} icon={Package} tone="amber" valueTone="amber" />
+                <StatCard label="Judul Koleksi" value={summary?.collection_titles ?? 0} icon={Layers} tone="sky" valueTone="sky" />
             </div>
 
             <Card bodyClass="p-4" className="mb-4">
@@ -187,7 +173,7 @@ export default function BooksIndex({ books, categories = [], filters = {}, summa
                 >
                     <Field label="Cari Judul / Kode / Pengarang">
                         <div className="relative">
-                            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
                             <Input
                                 value={filterState.search}
                                 onChange={(event) =>
@@ -261,7 +247,7 @@ export default function BooksIndex({ books, categories = [], filters = {}, summa
                     <>
                         <div role="region" aria-label="Tabel buku" tabIndex={0} className="w-full overflow-x-auto">
                             <table className="w-full text-left text-xs">
-                                <thead className="bg-slate-50 text-[10px] uppercase tracking-wide text-slate-500">
+                                <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
                                     <tr>
                                         <th className="hidden px-3 py-2.5 font-bold xl:table-cell">Kode</th>
                                         <th className="px-4 py-2.5 font-bold">Judul &amp; Penerbit</th>
@@ -281,16 +267,16 @@ export default function BooksIndex({ books, categories = [], filters = {}, summa
 
                                         return (
                                             <tr key={book.id} className="hover:bg-slate-50/70">
-                                                <td className="hidden px-3 py-2.5 font-mono text-[11px] font-bold text-slate-500 xl:table-cell">
+                                                <td className="hidden px-3 py-2.5 font-mono text-xs font-bold text-slate-500 xl:table-cell">
                                                     {book.code}
                                                 </td>
                                                 <td className="px-4 py-2.5">
                                                     <p className="truncate font-bold text-slate-800 max-w-[16rem]">{book.title}</p>
-                                                    <p className="truncate text-[11px] text-slate-500 max-w-[16rem]">
+                                                    <p className="truncate text-xs text-slate-500 max-w-[16rem]">
                                                         {book.author ?? '-'}
                                                         {book.publisher ? ` · ${book.publisher}` : ''}
                                                     </p>
-                                                    <p className="truncate font-mono text-[10px] text-slate-400 xl:hidden">
+                                                    <p className="truncate font-mono text-xs text-slate-500 xl:hidden">
                                                         {book.code}
                                                     </p>
                                                 </td>
@@ -309,7 +295,7 @@ export default function BooksIndex({ books, categories = [], filters = {}, summa
                                                         {TYPE_LABEL[book.book_type] ?? book.book_type}
                                                     </Badge>
                                                     {book.grade_level ? (
-                                                        <p className="mt-1 text-[10px] text-slate-500">
+                                                        <p className="mt-1 text-xs text-slate-500">
                                                             Target Kelas {book.grade_level}
                                                         </p>
                                                     ) : null}
@@ -320,7 +306,7 @@ export default function BooksIndex({ books, categories = [], filters = {}, summa
                                                 <td className="whitespace-nowrap px-3 py-2.5">
                                                     <p className="font-bold text-slate-700">
                                                         {book.available_copies}
-                                                        <span className="font-normal text-slate-400">
+                                                        <span className="font-normal text-slate-500">
                                                             /{book.total_copies}
                                                         </span>
                                                     </p>
@@ -344,7 +330,7 @@ export default function BooksIndex({ books, categories = [], filters = {}, summa
                                                             <button
                                                                 type="button"
                                                                 onClick={() => openEdit(book)}
-                                                                className="rounded-md p-1.5 text-slate-400 transition hover:bg-sky-50 hover:text-sky-600"
+                                                                className="rounded-md p-1.5 text-slate-500 transition hover:bg-sky-50 hover:text-sky-600"
                                                                 title="Ubah data buku"
                                                             >
                                                                 <Pencil className="h-4 w-4" />
@@ -352,7 +338,7 @@ export default function BooksIndex({ books, categories = [], filters = {}, summa
                                                             <button
                                                                 type="button"
                                                                 onClick={() => deleteBook(book)}
-                                                                className="rounded-md p-1.5 text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
+                                                                className="rounded-md p-1.5 text-slate-500 transition hover:bg-rose-50 hover:text-rose-600"
                                                                 title="Hapus buku"
                                                             >
                                                                 <Trash2 className="h-4 w-4" />
@@ -378,14 +364,14 @@ export default function BooksIndex({ books, categories = [], filters = {}, summa
                             <h3 className="text-sm font-extrabold text-slate-900">
                                 {editing ? 'Ubah Data Buku' : 'Tambah Buku Baru'}
                             </h3>
-                            <p className="text-[11px] text-slate-500">
+                            <p className="text-xs text-slate-500">
                                 Kode buku otomatis berurutan, silakan ubah bila perlu.
                             </p>
                         </div>
                         <button
                             type="button"
                             onClick={closeModal}
-                            className="rounded-md p-1.5 text-slate-400 hover:bg-slate-100"
+                            className="rounded-md p-1.5 text-slate-500 hover:bg-slate-100"
                         >
                             <X className="h-4 w-4" />
                         </button>

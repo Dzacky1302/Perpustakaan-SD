@@ -133,7 +133,7 @@ export default function StudentsIndex({ students, classrooms = [], filters = {} 
                 >
                     <Field label="Cari Nama / NISN" className="lg:col-span-2">
                         <div className="relative">
-                            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
                             <Input
                                 value={filterState.search}
                                 onChange={(event) =>
@@ -204,7 +204,7 @@ export default function StudentsIndex({ students, classrooms = [], filters = {} 
                     <>
                         <div role="region" aria-label="Tabel siswa" tabIndex={0} className="w-full overflow-x-auto">
                             <table className="w-full text-left text-xs">
-                                <thead className="bg-slate-50 text-[10px] uppercase tracking-wide text-slate-500">
+                                <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
                                     <tr>
                                         <th className="hidden px-3 py-2.5 font-bold xl:table-cell">NISN</th>
                                         <th className="px-4 py-2.5 font-bold">Nama Siswa</th>
@@ -218,12 +218,12 @@ export default function StudentsIndex({ students, classrooms = [], filters = {} 
                                 <tbody className="divide-y divide-slate-100">
                                     {students.data.map((student) => (
                                         <tr key={student.id} className="hover:bg-slate-50/70">
-                                            <td className="hidden px-3 py-2.5 font-mono text-[11px] font-bold text-slate-500 xl:table-cell">
+                                            <td className="hidden px-3 py-2.5 font-mono text-xs font-bold text-slate-500 xl:table-cell">
                                                 {student.nisn}
                                             </td>
                                             <td className="px-4 py-2.5">
                                                 <p className="truncate font-bold text-slate-800 max-w-[11rem]">{student.name}</p>
-                                                <p className="truncate font-mono text-[10px] text-slate-400 xl:hidden">
+                                                <p className="truncate font-mono text-xs text-slate-500 xl:hidden">
                                                     {student.nisn}
                                                 </p>
                                             </td>
@@ -256,7 +256,7 @@ export default function StudentsIndex({ students, classrooms = [], filters = {} 
                                                         href={route('students.free-certificate', student.id)}
                                                         target="_blank"
                                                         rel="noreferrer"
-                                                        className="rounded-md p-1.5 text-slate-400 transition hover:bg-amber-50 hover:text-amber-600"
+                                                        className="rounded-md p-1.5 text-slate-500 transition hover:bg-amber-50 hover:text-amber-600"
                                                         title="Cetak Surat Bebas Pustaka"
                                                     >
                                                         <FileText className="h-4 w-4" />
@@ -265,7 +265,7 @@ export default function StudentsIndex({ students, classrooms = [], filters = {} 
                                                         <button
                                                             type="button"
                                                             onClick={() => openEdit(student)}
-                                                            className="rounded-md p-1.5 text-slate-400 transition hover:bg-sky-50 hover:text-sky-600"
+                                                            className="rounded-md p-1.5 text-slate-500 transition hover:bg-sky-50 hover:text-sky-600"
                                                             title="Ubah data siswa"
                                                         >
                                                             <Pencil className="h-4 w-4" />
@@ -273,7 +273,7 @@ export default function StudentsIndex({ students, classrooms = [], filters = {} 
                                                         <button
                                                             type="button"
                                                             onClick={() => remove(student)}
-                                                            className="rounded-md p-1.5 text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
+                                                            className="rounded-md p-1.5 text-slate-500 transition hover:bg-rose-50 hover:text-rose-600"
                                                             title="Hapus data siswa"
                                                         >
                                                             <Trash2 className="h-4 w-4" />
@@ -300,7 +300,7 @@ export default function StudentsIndex({ students, classrooms = [], filters = {} 
                         <button
                             type="button"
                             onClick={closeModal}
-                            className="rounded-md p-1.5 text-slate-400 hover:bg-slate-100"
+                            className="rounded-md p-1.5 text-slate-500 hover:bg-slate-100"
                         >
                             <X className="h-4 w-4" />
                         </button>
@@ -371,14 +371,14 @@ export default function StudentsIndex({ students, classrooms = [], filters = {} 
                         <button
                             type="button"
                             onClick={() => setShowImport(false)}
-                            className="rounded-md p-1.5 text-slate-400 hover:bg-slate-100"
+                            className="rounded-md p-1.5 text-slate-500 hover:bg-slate-100"
                         >
                             <X className="h-4 w-4" />
                         </button>
                     </div>
 
                     <div className="space-y-4 px-5 py-5">
-                        <ol className="list-decimal space-y-1 rounded-xl border border-sky-200 bg-sky-50 py-3 pl-9 pr-5 text-[11px] text-sky-900">
+                        <ol className="list-decimal space-y-1 rounded-xl border border-sky-200 bg-sky-50 py-3 pl-9 pr-5 text-xs text-sky-900">
                             <li>
                                 Unduh template, lalu isi kolom <strong>NISN</strong>,{' '}
                                 <strong>Nama Lengkap</strong>, <strong>L/P</strong>, dan <strong>Kelas</strong>{' '}

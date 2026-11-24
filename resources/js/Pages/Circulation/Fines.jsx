@@ -1,11 +1,11 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Modal from '@/Components/Modal';
 import Pagination from '@/Components/Pagination';
-import { Badge, Button, Card, EmptyState, Field, Input, PageHeader, cn } from '@/Components/ui';
+import { Badge, Button, Card, EmptyState, Field, Input, PageHeader, StatCard, cn } from '@/Components/ui';
 import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
 import { CanManage } from '@/hooks/useCanManage';
-import { Banknote, CheckCircle2, Download, Info, RotateCcw, Search, TrendingUp, X } from 'lucide-react';
+import { Banknote, BookOpen, CheckCircle2, Download, Info, RotateCcw, Search, TrendingUp, X } from 'lucide-react';
 
 const STATUS_TABS = [
     { value: 'belum', label: 'Belum Dibayar' },
@@ -75,32 +75,45 @@ export default function FinesIndex({ fines, filters = {}, summary = {} }) {
             <Head title="Denda Keterlambatan" />
 
             <div className="mb-4 grid grid-cols-2 gap-4 lg:grid-cols-4">
-                <div className="rounded-2xl border border-rose-200 bg-rose-50/60 p-4">
-                    <p className="text-[11px] font-bold uppercase text-rose-700">Belum Dibayar</p>
-                    <p className="mt-1 text-xl font-extrabold text-rose-700">{summary.unpaid_label ?? 'Rp0'}</p>
-                    <p className="mt-1 text-[11px] text-rose-600">{summary.count_unpaid ?? 0} buku</p>
-                </div>
-                <div className="rounded-2xl border border-emerald-200 bg-emerald-50/60 p-4">
-                    <p className="text-[11px] font-bold uppercase text-emerald-700">Sudah Diterima</p>
-                    <p className="mt-1 text-xl font-extrabold text-emerald-700">
-                        {summary.collected_label ?? 'Rp0'}
-                    </p>
-                </div>
-                <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                    <p className="text-[11px] font-bold uppercase text-slate-500">Tarif per Hari</p>
-                    <p className="mt-1 text-xl font-extrabold text-slate-900">{summary.rate ?? 'Rp500'}</p>
-                    <p className="mt-1 text-[11px] text-slate-500">per hari sekolah</p>
-                </div>
-                <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                    <p className="text-[11px] font-bold uppercase text-slate-500">Batas per Buku</p>
-                    <p className="mt-1 text-xl font-extrabold text-slate-900">{summary.max ?? 'Rp10.000'}</p>
-                </div>
+                <StatCard
+                    label="Belum Dibayar"
+                    value={summary.unpaid_label ?? 'Rp0'}
+                    valueSize="text-lg sm:text-xl"
+                    hint={`${summary.count_unpaid ?? 0} buku`}
+                    icon={Banknote}
+                    tone="rose"
+                    valueTone="rose"
+                />
+                <StatCard
+                    label="Sudah Diterima"
+                    value={summary.collected_label ?? 'Rp0'}
+                    valueSize="text-lg sm:text-xl"
+                    icon={CheckCircle2}
+                    tone="emerald"
+                    valueTone="emerald"
+                />
+                <StatCard
+                    label="Tarif per Hari"
+                    value={summary.rate ?? 'Rp500'}
+                    valueSize="text-lg sm:text-xl"
+                    hint="Per hari sekolah"
+                    icon={Info}
+                    tone="slate"
+                />
+                <StatCard
+                    label="Batas per Buku"
+                    value={summary.max ?? 'Rp10.000'}
+                    valueSize="text-lg sm:text-xl"
+                    hint="Maksimum tiap buku"
+                    icon={BookOpen}
+                    tone="slate"
+                />
             </div>
 
             <Card bodyClass="p-0" className="mt-4">
                 <div className="flex gap-2.5 border-b border-slate-100 px-5 py-3.5">
                     <Info className="mt-0.5 h-4 w-4 shrink-0 text-sky-600" />
-                    <p className="text-[11px] leading-relaxed text-slate-600">
+                    <p className="text-xs leading-relaxed text-slate-600">
                         Denda dihitung <strong>per hari sekolah</strong> (Senin–Jumat). Sabtu, Minggu, dan hari
                         libur nasional <strong>tidak menambah denda</strong>. Karena itu buku yang jatuh tempo
                         Jumat boleh dikembalikan hari Senin berikutnya tanpa denda.
@@ -114,7 +127,7 @@ export default function FinesIndex({ fines, filters = {}, summary = {} }) {
                             type="button"
                             onClick={() => applyFilters({ status: tab.value })}
                             className={cn(
-                                'rounded-lg px-3 py-1.5 text-[11px] font-bold transition',
+                                'rounded-lg px-3 py-1.5 text-xs font-bold transition',
                                 filterState.status === tab.value
                                     ? 'bg-slate-900 text-white'
                                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200',
@@ -134,7 +147,7 @@ export default function FinesIndex({ fines, filters = {}, summary = {} }) {
                 >
                     <Field label="Cari Siswa / Buku" className="max-w-md">
                         <div className="relative">
-                            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
                             <Input
                                 value={filterState.search}
                                 onChange={(event) =>
@@ -151,7 +164,7 @@ export default function FinesIndex({ fines, filters = {}, summary = {} }) {
                     <>
                         <div role="region" aria-label="Tabel denda" tabIndex={0} className="w-full overflow-x-auto">
                             <table className="w-full">
-                                <thead className="bg-slate-50 text-left text-[11px] uppercase tracking-wide text-slate-500">
+                                <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
                                     <tr>
                                         <th className="px-4 py-2.5">Siswa</th>
                                         <th className="px-3 py-2.5">Buku</th>
@@ -166,13 +179,13 @@ export default function FinesIndex({ fines, filters = {}, summary = {} }) {
                                         <tr key={fine.id} className="text-xs text-slate-700">
                                             <td className="px-4 py-2.5">
                                                 <p className="truncate font-semibold text-slate-800 max-w-[10rem]">{fine.student}</p>
-                                                <p className="truncate text-[11px] text-slate-500 max-w-[14rem]">
+                                                <p className="truncate text-xs text-slate-500 max-w-[14rem]">
                                                     {fine.classroom ?? 'Tidak tercatat'} · {fine.nisn}
                                                 </p>
                                             </td>
                                             <td className="px-3 py-2.5">
                                                 <p className="truncate text-slate-700 max-w-[14rem]">{fine.book}</p>
-                                                <p className="truncate text-[11px] text-slate-500 max-w-[14rem]">
+                                                <p className="truncate text-xs text-slate-500 max-w-[14rem]">
                                                     Kembali {fine.returned_at ?? '-'}
                                                 </p>
                                             </td>
@@ -217,7 +230,7 @@ export default function FinesIndex({ fines, filters = {}, summary = {} }) {
                                 <button
                                     type="button"
                                     onClick={() => setPaying(null)}
-                                    className="rounded-md p-1.5 text-slate-400 hover:bg-slate-100"
+                                    className="rounded-md p-1.5 text-slate-500 hover:bg-slate-100"
                                 >
                                     <X className="h-4 w-4" />
                                 </button>
@@ -229,7 +242,7 @@ export default function FinesIndex({ fines, filters = {}, summary = {} }) {
                                     <p className="text-slate-500">{paying.book}</p>
                                     <p className="mt-1.5 text-sm font-extrabold text-rose-700">
                                         {paying.fine_label}
-                                        <span className="ml-1.5 text-[11px] font-normal text-slate-600">
+                                        <span className="ml-1.5 text-xs font-normal text-slate-600">
                                             ({paying.days_late} hari terlambat)
                                         </span>
                                     </p>
@@ -270,7 +283,7 @@ function FineActions({ fine, onPay, onCancel }) {
                         <button
                             type="button"
                             onClick={() => onCancel(fine)}
-                            className="rounded-md p-1.5 text-slate-400 transition hover:bg-amber-50 hover:text-amber-600"
+                            className="rounded-md p-1.5 text-slate-500 transition hover:bg-amber-50 hover:text-amber-600"
                             title="Batalkan pembayaran"
                         >
                             <RotateCcw className="h-4 w-4" />

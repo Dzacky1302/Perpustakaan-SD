@@ -120,7 +120,7 @@ export default function BackupsIndex({ backups = [], settings = {}, summary = {}
                 {backups.length > 0 ? (
                     <div role="region" aria-label="Tabel cadangan" tabIndex={0} className="w-full overflow-x-auto">
                         <table className="w-full">
-                            <thead className="bg-slate-50 text-left text-[11px] uppercase tracking-wide text-slate-500">
+                            <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
                                 <tr>
                                     <th className="px-5 py-3">Berkas</th>
                                     <th className="px-5 py-3">Dibuat</th>
@@ -141,7 +141,7 @@ export default function BackupsIndex({ backups = [], settings = {}, summary = {}
                                         </td>
                                         <td className="px-5 py-3">
                                             <p>{backup.created_label}</p>
-                                            <p className="text-[11px] text-slate-500">
+                                            <p className="text-xs text-slate-500">
                                                 {backup.age_days === 0
                                                     ? 'Hari ini'
                                                     : `${backup.age_days} hari lalu`}
@@ -154,7 +154,7 @@ export default function BackupsIndex({ backups = [], settings = {}, summary = {}
                                             <div className="flex items-center justify-end gap-1.5">
                                                 <a
                                                     href={route('backups.download', backup.filename)}
-                                                    className="rounded-md p-1.5 text-slate-400 transition hover:bg-sky-50 hover:text-sky-600"
+                                                    className="rounded-md p-1.5 text-slate-500 transition hover:bg-sky-50 hover:text-sky-600"
                                                     title="Unduh backup"
                                                 >
                                                     <Download className="h-4 w-4" />
@@ -166,7 +166,7 @@ export default function BackupsIndex({ backups = [], settings = {}, summary = {}
                                                             setRestoring(backup);
                                                             restoreForm.setData({ confirm: false });
                                                         }}
-                                                        className="rounded-md p-1.5 text-slate-400 transition hover:bg-emerald-50 hover:text-emerald-600"
+                                                        className="rounded-md p-1.5 text-slate-500 transition hover:bg-emerald-50 hover:text-emerald-600"
                                                         title="Pulihkan database"
                                                     >
                                                         <Upload className="h-4 w-4" />
@@ -174,7 +174,7 @@ export default function BackupsIndex({ backups = [], settings = {}, summary = {}
                                                     <button
                                                         type="button"
                                                         onClick={() => removeBackup(backup)}
-                                                        className="rounded-md p-1.5 text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
+                                                        className="rounded-md p-1.5 text-slate-500 transition hover:bg-rose-50 hover:text-rose-600"
                                                         title="Hapus backup"
                                                     >
                                                         <Trash2 className="h-4 w-4" />
@@ -237,7 +237,7 @@ export default function BackupsIndex({ backups = [], settings = {}, summary = {}
                             <button
                                 type="button"
                                 onClick={() => setRestoring(null)}
-                                className="rounded-md p-1.5 text-slate-400 hover:bg-slate-100"
+                                className="rounded-md p-1.5 text-slate-500 hover:bg-slate-100"
                             >
                                 <X className="h-4 w-4" />
                             </button>
@@ -265,7 +265,7 @@ export default function BackupsIndex({ backups = [], settings = {}, summary = {}
                                 />
                                 <span className="text-xs text-slate-700">
                                     Saya mengerti dampaknya dan ingin melanjutkan pemulihan database.
-                                    <span className="mt-0.5 block text-[11px] text-slate-500">
+                                    <span className="mt-0.5 block text-xs text-slate-500">
                                         Sistem akan membuat backup pengaman lebih dulu sebelum menimpa.
                                     </span>
                                 </span>
