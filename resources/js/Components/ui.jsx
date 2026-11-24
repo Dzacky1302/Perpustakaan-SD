@@ -266,8 +266,15 @@ export function TableSkeleton({ rows = 5, cols = 4 }) {
     );
 }
 
-/* Wrapper tabel responsif: scroll horizontal di HP + header sticky. */
-export function TableWrapper({ children, className = '' }) {
-    return <div className={cn('table-sticky-head max-h-[70vh] overflow-auto rounded-b-2xl', className)}>{children}</div>;
+/* Wrapper tabel responsif: scroll horizontal di HP + header sticky.
+   `role="region"` dan `tabindex` membuat area yang bisa digulir ini
+   bisa dijelajahi lewat keyboard, dan `label` menggantikan peran
+   `<caption>` sebagai nama aksesibel tabelnya. */
+export function TableWrapper({ children, className = '', label = 'Tabel data' }) {
+    return (
+        <div role="region" aria-label={label} tabIndex={0} className={cn('table-sticky-head max-h-[70vh] overflow-auto rounded-b-2xl', className)}>
+            {children}
+        </div>
+    );
 }
 

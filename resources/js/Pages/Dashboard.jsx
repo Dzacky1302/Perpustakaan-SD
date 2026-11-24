@@ -376,7 +376,7 @@ export default function Dashboard({
                             />
                         </div>
                     ) : (
-                        <TableWrapper>
+                        <TableWrapper label="Peminjaman terbaru">
                             <table className="w-full min-w-[620px] text-left text-xs">
                                 <thead className="bg-slate-50 text-[10px] uppercase tracking-wide text-slate-500">
                                     <tr>
@@ -437,7 +437,7 @@ export default function Dashboard({
                             />
                         </div>
                     ) : (
-                        <TableWrapper>
+                        <TableWrapper label="Kunjungan per kelas">
                             <table className="w-full min-w-[560px] text-left text-xs">
                                 <thead className="bg-slate-50 text-[10px] uppercase tracking-wide text-slate-500">
                                     <tr>

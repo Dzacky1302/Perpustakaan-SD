@@ -33,3 +33,114 @@
         z-index: 10;
     }
 }
+
+/* --------------------------------------------------------------------------
+   Modal native <dialog>
+   -------------------------------------------------------------------------- */
+
+/* Aplikasi hanya punya mode terang, jadi kontrol bawaan browser (picker,
+   scrollbar, autofill) diminta mengikuti mode itu. */
+:root {
+    color-scheme: light;
+}
+
+/* Reset gaya bawaan browser: padding dan border UA harus hilang supaya
+   desain panel tetap milik kita. Wajib juga dua baris overscroll di bawah —
+   tanpanya scroll di backdrop atau di dalam modal ikut menggulir halaman
+   di belakangnya. */
+.modal-dialog {
+    padding: 0;
+    border: 1px solid theme('colors.slate.200');
+    border-radius: 1rem;
+    background-color: theme('colors.white');
+    box-shadow: theme('boxShadow.pop');
+    max-height: calc(100vh - 2rem);
+    overflow: auto;
+}
+
+/* Selalu modal saat terbuka, jadi cukup disasar dengan kelasnya sendiri
+   (pseudo `:modal` sendiri baru didukung browser relatif baru). */
+.modal-dialog {
+    overscroll-behavior: contain;
+}
+
+/* Animasi masuk & keluar dari top layer: butuh `overlay`, `display`, dan
+   `transition-behavior: allow-discrete` ditulis terpisah dari shorthand.
+   `@starting-style` memberi titik awal saat dialog baru muncul. */
+.modal-dialog {
+    opacity: 0;
+    transition-property: opacity, transform, display, overlay;
+    transition-duration: 0.3s;
+    transition-timing-function: ease-out;
+    transition-behavior: allow-discrete;
+}
+
+.modal-dialog[open]:not([data-closing]) {
+    opacity: 1;
+
+    @starting-style {
+        opacity: 0;
+    }
+}
+
+/* Skala hanya untuk pengguna yang tidak meminta gerak minimal. */
+@media (prefers-reduced-motion: no-preference) {
+    .modal-dialog {
+        transform: scale(0.97);
+    }
+
+    .modal-dialog[open]:not([data-closing]) {
+        transform: scale(1);
+
+        @starting-style {
+            transform: scale(0.97);
+        }
+    }
+}
+
+.modal-dialog::backdrop {
+    background-color: rgb(15 23 42 / 0);
+    backdrop-filter: blur(0);
+    overflow: hidden;
+    overscroll-behavior: contain;
+    transition-property: background-color, backdrop-filter, display, overlay;
+    transition-duration: 0.3s;
+    transition-timing-function: ease-out;
+    transition-behavior: allow-discrete;
+}
+
+.modal-dialog[open]:not([data-closing])::backdrop {
+    background-color: rgb(15 23 42 / 0.5);
+    backdrop-filter: blur(2px);
+
+    @starting-style {
+        background-color: rgb(15 23 42 / 0);
+        backdrop-filter: blur(0);
+    }
+}
+
+/* --------------------------------------------------------------------------
+   Hormati preferensi gerak pengguna
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+
+    /* Modal tetap memudar sebentar supaya tidak menghilang mendadak. */
+    .modal-dialog,
+    .modal-dialog::backdrop {
+        transition-duration: 0.1s !important;
+    }
+
+    /* Garis waktu toast bersifat hiasan, bukan satu-satunya penanda. */
+    .toast-progress {
+        animation: none !important;
+    }
+}
+

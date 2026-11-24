@@ -149,7 +149,7 @@ export default function FinesIndex({ fines, filters = {}, summary = {} }) {
 
                 {rows?.length > 0 ? (
                     <>
-                        <div className="w-full overflow-x-auto">
+                        <div role="region" aria-label="Tabel denda" tabIndex={0} className="w-full overflow-x-auto">
                             <table className="w-full">
                                 <thead className="bg-slate-50 text-left text-[11px] uppercase tracking-wide text-slate-500">
                                     <tr>

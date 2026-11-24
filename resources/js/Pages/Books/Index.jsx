@@ -259,7 +259,7 @@ export default function BooksIndex({ books, categories = [], filters = {}, summa
                     </div>
                 ) : (
                     <>
-                        <div className="w-full overflow-x-auto">
+                        <div role="region" aria-label="Tabel buku" tabIndex={0} className="w-full overflow-x-auto">
                             <table className="w-full text-left text-xs">
                                 <thead className="bg-slate-50 text-[10px] uppercase tracking-wide text-slate-500">
                                     <tr>

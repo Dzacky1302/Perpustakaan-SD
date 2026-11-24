@@ -265,7 +265,7 @@ export default function PackageLoansIndex({
                         />
                     </div>
                 ) : (
-                    <div className="max-h-[70vh] overflow-auto">
+                    <div role="region" aria-label="Tabel pinjaman paket" tabIndex={0} className="max-h-[70vh] overflow-auto">
                         <table className="min-w-full border-separate border-spacing-0 text-left text-xs">
                             <thead>
                                 <tr>

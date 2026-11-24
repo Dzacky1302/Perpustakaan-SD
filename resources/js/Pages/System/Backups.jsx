@@ -118,7 +118,7 @@ export default function BackupsIndex({ backups = [], settings = {}, summary = {}
                 className="mb-4"
             >
                 {backups.length > 0 ? (
-                    <div className="w-full overflow-x-auto">
+                    <div role="region" aria-label="Tabel cadangan" tabIndex={0} className="w-full overflow-x-auto">
                         <table className="w-full">
                             <thead className="bg-slate-50 text-left text-[11px] uppercase tracking-wide text-slate-500">
                                 <tr>

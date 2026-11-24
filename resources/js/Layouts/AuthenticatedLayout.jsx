@@ -67,9 +67,12 @@ export default function AuthenticatedLayout({ header, children }) {
     const user = auth?.user;
     const [mobileOpen, setMobileOpen] = useState(false);
     const [toast, setToast] = useState(null);
+    const [toastPaused, setToastPaused] = useState(false);
 
     useEffect(() => {
         if (!flash) return;
+
+        setToastPaused(false);
 
         if (flash.success) setToast({ type: 'success', text: flash.success });
         else if (flash.error) setToast({ type: 'error', text: flash.error });
@@ -78,12 +81,12 @@ export default function AuthenticatedLayout({ header, children }) {
     }, [flash]);
 
     useEffect(() => {
-        if (!toast) return;
+        if (!toast || toastPaused) return;
 
         const timer = setTimeout(() => setToast(null), 6000);
 
         return () => clearTimeout(timer);
-    }, [toast]);
+    }, [toast, toastPaused]);
 
     const dismissToast = () => setToast(null);
 
@@ -108,10 +111,27 @@ export default function AuthenticatedLayout({ header, children }) {
                 setMobileOpen={setMobileOpen}
             />
 
-            {toast && (
-                <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+            {/* Wadah notifikasi selalu ada di DOM, termasuk saat kosong,
+                supaya pembaca layar sudah mengenali wilayahnya sebelum ada
+                pesan masuk. Pengumuman memakai wilayah terpisah yang isinya
+                hanya teks — bukan seluruh isi toast, jadi nama tombol
+                "Tutup" tidak ikut diucapkan. */}
+            <div role="region" aria-label="Notifikasi" className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+                <div role="status" aria-live="polite" className="sr-only">
+                    {toast ? toast.text : ''}
+                </div>
+
+                {toast && (
                     <div
-                        role="status"
+                        onFocusCapture={() => setToastPaused(true)}
+                        onBlurCapture={(event) => {
+                            // Hitung mundur dijeda selama fokus masih di dalam
+                            // toast, supaya pesan tidak lenyap saat pengguna
+                            // keyboard baru saja menekan tombol Tutup.
+                            if (!event.currentTarget.contains(event.relatedTarget)) {
+                                setToastPaused(false);
+                            }
+                        }}
                         className={
                             'mt-4 animate-fade-up overflow-hidden rounded-xl border text-sm font-medium shadow-card ' +
                             (toastStyles[toast.type] ?? toastStyles.info)
@@ -120,9 +140,9 @@ export default function AuthenticatedLayout({ header, children }) {
                         <div className="flex items-center justify-between gap-3 p-3.5">
                             <span className="flex min-w-0 items-center gap-2.5">
                                 {toast.type === 'success' ? (
-                                    <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" />
+                                    <CheckCircle2 aria-hidden="true" className="h-5 w-5 shrink-0 text-emerald-600" />
                                 ) : (
-                                    <AlertCircle className="h-5 w-5 shrink-0 text-rose-600" />
+                                    <AlertCircle aria-hidden="true" className="h-5 w-5 shrink-0 text-rose-600" />
                                 )}
                                 <span className="truncate">{toast.text}</span>
                             </span>
@@ -132,19 +152,22 @@ export default function AuthenticatedLayout({ header, children }) {
                                 aria-label="Tutup notifikasi"
                                 className="rounded-md p-1 text-slate-400 transition hover:bg-white/60 hover:text-slate-600"
                             >
-                                <X className="h-4 w-4" />
+                                <X aria-hidden="true" className="h-4 w-4" />
                             </button>
                         </div>
                         <div className="h-0.5 w-full bg-slate-900/5">
                             <div
                                 key={toast.text}
-                                className="h-full origin-left bg-current opacity-30"
-                                style={{ animation: 'toast-progress 6s linear forwards' }}
+                                className="toast-progress h-full origin-left bg-current opacity-30"
+                                style={{
+                                    animation: 'toast-progress 6s linear forwards',
+                                    animationPlayState: toastPaused ? 'paused' : 'running',
+                                }}
                             />
                         </div>
                     </div>
-                </div>
-            )}
+                )}
+            </div>
 
             {header && (
                 <div className="border-b border-slate-200 bg-white">

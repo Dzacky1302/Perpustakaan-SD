@@ -196,14 +196,19 @@ export default function StudentPortalIndex({
             )}
 
             {step <= 5 && (
-                <ol className="mb-5 flex items-center justify-center gap-1.5">
-                    {STEPS.map((label, index) => {
-                        const number = index + 1;
-                        const active = step === number;
-                        const finished = step > number;
+                <nav aria-label="Langkah pengisian">
+                    <ol className="mb-5 flex items-center justify-center gap-1.5">
+                        {STEPS.map((label, index) => {
+                            const number = index + 1;
+                            const active = step === number;
+                            const finished = step > number;
 
-                        return (
-                            <li key={label} className="flex items-center gap-1.5">
+                            return (
+                                <li
+                                    key={label}
+                                    aria-current={active ? 'step' : undefined}
+                                    className="flex items-center gap-1.5"
+                                >
                                 <span
                                     className={cn(
                                         'flex h-8 w-8 items-center justify-center rounded-full text-xs font-extrabold',
@@ -235,7 +240,8 @@ export default function StudentPortalIndex({
                             </li>
                         );
                     })}
-                </ol>
+                    </ol>
+                </nav>
             )}
 
             {step === 6 && (
@@ -322,16 +328,22 @@ export default function StudentPortalIndex({
                         </Button>
                     </div>
 
-                    <div className="relative mb-3">
-                        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                    <search className="relative mb-3">
+                        <Search
+                            aria-hidden="true"
+                            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+                        />
                         <Input
                             ref={searchRef}
+                            type="search"
+                            aria-label="Cari nama siswa"
+                            enterKeyHint="search"
                             value={search}
                             onChange={(event) => setSearch(event.target.value)}
                             placeholder="Ketik nama..."
                             className="py-3 pl-9"
                         />
-                    </div>
+                    </search>
 
                     {loadingStudents ? (
                         <p className="py-6 text-center text-xs text-slate-500">
@@ -393,27 +405,47 @@ export default function StudentPortalIndex({
                     </div>
 
                     <form onSubmit={verifyNisn}>
-                        <p className="mb-1 text-xs font-bold uppercase tracking-wide text-slate-500">
+                        <label
+                            htmlFor="portal-nisn"
+                            className="mb-1 block text-xs font-bold uppercase tracking-wide text-slate-500"
+                        >
                             Masukkan NISN untuk verifikasi
-                        </p>
-                        <p className="mb-3 text-[11px] text-slate-500">
+                        </label>
+                        <p id="portal-nisn-help" className="mb-3 text-[11px] text-slate-500">
                             Ketik 10 angka NISN milikmu. NISN harus cocok dengan nama yang
                             dipilih, supaya data yang tercatat benar-benar milik siswa ini.
                         </p>
 
                         <Input
+                            id="portal-nisn"
+                            name="nisn"
                             value={data.nisn}
                             onChange={(event) => {
                                 setData(
                                     'nisn',
                                     event.target.value.replace(/\D/g, '').slice(0, 10),
                                 );
+                                // Pesan galat browser dibersihkan begitu pengguna
+                                // mengetik lagi, sesuai aturan validasi native.
+                                event.target.setCustomValidity('');
                                 setNisnError('');
                                 clearErrors('nisn');
                             }}
+                            onInvalid={(event) =>
+                                event.target.setCustomValidity('NISN harus terdiri dari 10 angka.')
+                            }
                             invalid={Boolean(nisnError || errors.nisn)}
+                            aria-describedby={`portal-nisn-help${
+                                nisnError || errors.nisn ? ' portal-nisn-error' : ''
+                            }`}
+                            required
+                            pattern="[0-9]{10}"
                             inputMode="numeric"
                             autoComplete="off"
+                            autoCorrect="off"
+                            autoCapitalize="none"
+                            spellCheck={false}
+                            enterKeyHint="go"
                             maxLength={10}
                             autoFocus
                             placeholder="Contoh: 1234567890"
@@ -421,7 +453,11 @@ export default function StudentPortalIndex({
                         />
 
                         {(nisnError || errors.nisn) && (
-                            <p className="mt-2 text-xs font-semibold text-rose-700">
+                            <p
+                                id="portal-nisn-error"
+                                role="alert"
+                                className="mt-2 text-xs font-semibold text-rose-700"
+                            >
                                 {nisnError || errors.nisn}
                             </p>
                         )}
@@ -517,15 +553,21 @@ export default function StudentPortalIndex({
                             </Button>
                         </div>
 
-                        <div className="relative mb-3">
-                            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                        <search className="relative mb-3">
+                            <Search
+                                aria-hidden="true"
+                                className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+                            />
                             <Input
+                                type="search"
+                                aria-label="Cari judul atau penulis buku"
+                                enterKeyHint="search"
                                 value={bookSearch}
                                 onChange={(event) => setBookSearch(event.target.value)}
                                 placeholder="Ketik judul atau penulis..."
                                 className="py-3 pl-9"
                             />
-                        </div>
+                        </search>
 
 
 
