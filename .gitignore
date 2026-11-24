@@ -35,3 +35,10 @@ Thumbs.db
 /storage/app/temp/
 /storage/framework/testing/
 
+# Catatan kerja sementara di root — dibuat saat pengembangan, bukan proyek.
+/*.txt
+/*.py
+/edit_*.*
+/tmp_*.php
+/_*.txt
+

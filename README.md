@@ -27,19 +27,19 @@ Kebanyakan perpustakaan sekolah masih andalin buku tamu kertas dan pencatatan ma
 
 Aplikasinya dipakai dua cara:
 
-- **Portal siswa** (`/peminjaman`) — **butuh login**, buat catatan kunjungan. Siswa milih kelas, namanya, sama keperluan; waktu datang dicatat sistem.
+- **Portal siswa** (`/peminjaman`) — **terbuka tanpa login**, buat catatan kunjungan. Siswa milih kelas, namanya, sama keperluan; nama yang dipilih harus cocok dengan NISN yang diketik, baru data tersimpan. Waktu datang dicatat sistem.
 - **Panel petugas** — buat pustakawan sama kepala sekolah, dengan hak akses yang beda.
 
 ## Fitur
 
 | Modul | Kemampuan |
 |---|---|
-| **Buku Tamu Digital** | Kios layar sentuh + portal siswa (butuh login). Kunjungan, keperluan, dan buku yang dibaca tercatat otomatis. |
+| **Buku Tamu Digital** | Portal siswa mandiri di `/peminjaman`: pilih kelas dan nama, verifikasi NISN, lalu kunjungan tercatat otomatis. |
 | **Sirkulasi Koleksi** | Peminjaman, pengembalian, batas kuota, jatuh tempo, dan pencatatan buku hilang. |
 | **Denda** | Dihitung otomatis per **hari sekolah**, dibayar di loket, dan memblokir peminjaman berikutnya bila belum lunas. |
 | **Buku Paket** | Distribusi massal satu kelas sekali klik, dengan matriks penerimaan dan pengembalian per siswa. |
 | **Kenaikan Kelas** | Memindahkan seluruh siswa satu tingkat dalam satu aksi, tanpa merusak riwayat kelas. |
-| **Slip Cetak** | Surat peminjaman, surat pengembalian, dan kuitansi denda — tagihan (KT) maupun pelunasan (KP) — dalam PDF A5 ber-kop sekolah, lengkap dengan kode verifikasi dan riwayat cetak per salinan. |
+| **Slip Cetak** | Surat peminjaman dan surat pengembalian dalam PDF A5 ber-kop sekolah, lengkap dengan lama pinjam, data eksemplar, kode verifikasi, dan riwayat cetak per salinan. |
 | **Laporan** | PDF dan Excel ber-kop sekolah: buku tamu, peminjaman, buku paket, denda, serta surat bebas pustaka. |
 | **Cadangan Otomatis** | `VACUUM INTO` terjadwal harian, rotasi 14 berkas, dan pemulihan data yang aman. |
 | **Manajemen Data** | Kelas, siswa (impor Excel), kategori, dan katalog buku lengkap dengan pengelolaan stok. |
@@ -55,9 +55,10 @@ Dua level, dijaga di sisi server lewat middleware:
 
 Tombol yang nggak kepake disembunyiin di tampilan, tapi penjaganya beneran ada di server — coba `POST`/`PATCH`/`DELETE` langsung, ditolak **403**.
 
-Satu pengecualian yang sengaja dipersempit: **mencetak kuitansi denda** hanya boleh pustakawan. Kepsek tetap dapat 403, karena tiap cetakan menambah salinan resmi yang tercatat di arsip.
-
-**Buku Tamu (kios)** juga dipersempit: halaman ini murni input, bukan laporan, jadi kepsek sudah ditolak **403 sejak halaman dibuka** — bukan baru ditolak waktu menyimpan. Percuma nunjukin form tiga langkah yang isinya nggak bakal kesimpen.
+Karena seluruh tulis-menulis data lewat satu middleware, tidak ada endpoint yang
+lolos begitu saja. Halaman **portal siswa** di luar grup itu sengaja publik —
+tapi semua isinya divalidasi di server, jadi tidak ada yang bisa disimpan
+sembarangan lewat `POST` langsung.
 
 
 ## Screenshot
@@ -98,16 +99,16 @@ bukan di Controller, supaya dapat dipakai ulang dan diuji terpisah.
 ```
 app/Http/Controllers/     app/Services/                 app/Console/Commands/
 ├── DailyLoanController   ├── FineService              ├── BackupDatabaseCommand
-├── ReportController      ├── FineReceiptService       ├── RecalculateFinesCommand
-├── BackupController      ├── SlipService
-└── ...                   ├── BackupService
-                         ├── LibraryVisitService
-                         ├── BookStockService
-                         └── SpreadsheetService
+├── ReportController      ├── BookCopyService          ├── RecalculateFinesCommand
+├── StudentPortalController├── SlipService
+├── BackupController      └── BackupService
+└── ...                       ├── LibraryVisitService
+                             ├── BookStockService
+                             └── SpreadsheetService
 
 resources/js/Pages/
 ├── Circulation/   ├── Master/
-├── Kiosk/         └── System/Backups.jsx
+├── Student/       └── System/Backups.jsx
 ```
 
 `app/Http/Middleware/EnsureAdmin.php` menjadi satu-satunya penjaga hak akses
@@ -158,7 +159,7 @@ Kalau registrasi dibuka ke internet, siapa aja bisa daftar lalu langsung dapat a
 
 Ini bug beneran. Logika "berapa hari telat" awalnya nyebar di **empat tempat**: service, model (`liveFine` dan `isOverdue`), sama controller. Akibatnya tiap layar bisa nampilin angka yang beda-beda — dan itu bukan risiko teori, emang kejadian.
 
-Sekarang semuanya lewat `FineService`. Tampilan, kuitansi, sama laporan dijamin konsisten karena sumbernya cuma satu.
+Sekarang semuanya lewat `FineService`. Tampilan, filter, sama laporan dijamin konsisten karena sumbernya cuma satu — scope `DailyLoan::overdue()` pun memanggil service yang sama, jadi angka "terlambat" di dashboard, daftar peminjaman, dan laporan selalu identik.
 
 ### 7. Pembatasan login dipakai berlapis
 
@@ -191,19 +192,30 @@ Petugas tidak perlu tahu sedang mengetik apa. Satu kolom di form peminjaman memb
 Hasil pembacaannya ditampilkan terbuka, jadi petugas tahu persis buku dan eksemplar mana yang terpilih. Kalau hanya ISBN atau judul yang diketik, sistem memilih eksemplar yang available secara otomatis; eksemplar tertentu dipilih sendiri kalau yang diketik barcodenya.
 
 
-### 11. Kuitansi denda punya dua versi, plus riwayat cetak
+### 11. Portal terbuka tanpa login, tapi nama harus cocok NISN
 
-Kuitansi denda bukan satu dokumen. Sebelum dibayar, yang dicetak adalah **tagihan** (kode `KT`); setelah dibayar, yang dicetak adalah **pelunasan** (kode `KP`). Keduanya selalu mengambil angka dari `fine_amount` yang sudah dikunci, bukan dari hitungan yang masih berjalan — jadi nominal di kertas tidak akan berubah walau perhitungan denda dihitung ulang.
+Kios layar sentuh dan `KioskController` dihapus: satu tablet yang dipakai bergantian
+terlalu rawan disalahgunakan, dan butuh akun petugas yang login duluan. Diganti portal
+`/peminjaman` yang bisa dibuka siswa sendiri.
 
-Setiap pencetakan dicatat di `fine_receipt_prints`, lengkap dengan petugas dan waktunya. Cetakan pertama dianggap asli; cetakan kedua ke atas otomatis diberi watermark **SALINAN** dengan nomor salinannya. Akibatnya satu kuitansi tidak bisa dipakai dua kali untuk meyakinkan orang tua, dan arsipnya bisa jawab "sudah berapa kali dokumen ini dicetak?".
+Karena terbuka, dua hal dijaga:
 
-Di kuitansi tercetak kode verifikasi 8 karakter dari alfabet yang sengaja dibuang huruf mirip (`O/0`, `I/1`, `S/5`, `B/8`, `Z/2`), supaya enak dibaca dari kertas. Pengecekannya ada di `/kuitansi-denda/cek`, tapi **khusus petugas yang sudah masuk**. Kalau dibuka untuk publik, kode 8 karakter bisa ditebak dari luar dan justru jadi jaminan palsu.
+- **Daftar nama tidak membocorkan NISN.** Endpoint `/peminjaman/siswa` hanya
+  mengirim `id`, `name`, dan jumlah pinjaman aktif. NISN justru dipakai sebagai
+  kunci verifikasi, jadi tidak boleh terbaca dari daftar.
+- **Nama yang dipilih wajib cocok dengan NISN yang diketik.** Dicek di
+  `/peminjaman/verifikasi` *dan* diulang lagi saat penyimpanan, karena endpoint
+  simpan bisa dipanggil langsung tanpa melewati langkah verifikasi. Pesan
+  galatnya dibuat sama untuk "NISN tidak dikenal" dan "nama tidak cocok", supaya
+  penyerang tidak bisa menebak NISN mana yang terdaftar.
 
-Cetak kuitansinya sendiri dibatasi pustakawan saja — kepsek dapat **403** — karena tiap cetakan menambah salinan resmi yang tercatat di arsip.
+Ada pembatasan laju per IP (`throttle`) di kedua endpoint, dan siswa nonaktif
+ditolak walaupun datanya benar.
 
 ## Instalasi
 
-**Prasyarat:** PHP 8.2 atau lebih baru, Composer, dan Node.js 18+.
+**Prasyarat:** PHP 8.2 atau lebih baru (wajib punya ekstensi `zip` untuk ekspor
+Excel dan `mbstring`), Composer, dan Node.js 18+.
 
 ```bash
 # 1. Pasang dependensi, buat .env, generate key, migrate, build frontend
@@ -296,14 +308,15 @@ php artisan test --testdox                 # output lebih mudah dibaca
 php artisan test --filter Fine             # hanya test denda
 ```
 
-Status saat ini: **100 test lulus, 3 gagal (bukan dari perubahan keamanan — pre-existing: KioskController sudah dihapus, ZipArchive belum diinstal).**
+Status saat ini: **108 test lulus, 0 gagal.**
 
 Cakupan test meliputi snapshot kelas saat siswa naik kelas, pembatasan role
 pustakawan dan kepala sekolah (termasuk halaman input yang ditolak 403),
 perhitungan denda per hari sekolah (termasuk
 akhir pekan, libur nasional, dan cuti bersama), konsistensi tarif antar layar,
-pembatasan percobaan login, slip PDF, kuitansi denda (dua versi, kode
-verifikasi, dan riwayat cetak per salinan), serta backup database termasuk
+konsistensi hitungan keterlambatan antar layar (dashboard, filter, laporan),
+verifikasi portal siswa (nama harus cocok NISN, NISN tidak bocor dari daftar),
+pembatasan percobaan login, slip PDF, serta backup database termasuk
 rotasi dan penolakan path traversal.
 
 ## Keterbatasan
@@ -311,7 +324,7 @@ rotasi dan penolakan path traversal.
 Yang belum ada, aku tulis aja biar jelas:
 
 - **Belum ada REST API.** Semua masih server-rendered Inertia.
-- **Belum ada test frontend.** 100 test semuanya di sisi PHP, komponen React belum disentuh.
+- **Belum ada test frontend.** 108 test semuanya di sisi PHP, komponen React belum disentuh.
 - **Frontend masih JavaScript**, belum TypeScript.
 - **Halaman error Inertia** (`Error.jsx`) sudah ada untuk 404 & gangguan server
   dalam bahasa Indonesia, tapi **error boundary React** masih belum ada — kalau
