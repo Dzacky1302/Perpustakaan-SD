@@ -42,17 +42,13 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Awalan nomor slip cetak (surat peminjaman / pengembalian / denda)
+    | Awalan nomor slip cetak (surat peminjaman / pengembalian)
     |--------------------------------------------------------------------------
     | Nomor slip dibuat berurutan per hari, contoh: SP/2026/03/0007.
     */
     'slip' => [
         'loan_prefix' => env('PERPUS_SLIP_PINJAM', 'SP'),
         'return_prefix' => env('PERPUS_SLIP_KEMBALI', 'SK'),
-        'fine_prefix' => env('PERPUS_SLIP_DENDA', 'SD'),
-        // Kuitansi denda: KT = bukti utang, KP = bukti pelunasan.
-        'bill_receipt_prefix' => env('PERPUS_SLIP_TAGIHAN', 'KT'),
-        'paid_receipt_prefix' => env('PERPUS_SLIP_LUNAS', 'KP'),
     ],
 
     /*

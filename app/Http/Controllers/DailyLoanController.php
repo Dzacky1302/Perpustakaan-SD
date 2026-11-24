@@ -12,6 +12,7 @@ use App\Services\FineService;
 use App\Services\SlipService;
 use App\Services\SpreadsheetService;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -28,8 +29,7 @@ class DailyLoanController extends Controller
         private readonly SpreadsheetService $spreadsheet,
         private readonly FineService $fine,
         private readonly SlipService $slip,
-    ) {
-    }
+    ) {}
 
     public function index(Request $request): Response
     {
@@ -71,7 +71,7 @@ class DailyLoanController extends Controller
             ],
             'summary' => [
                 'active' => DailyLoan::active()->count(),
-                'overdue' => DailyLoan::active()->whereDate('due_at', '<', Carbon::today())->count(),
+                'overdue' => DailyLoan::overdue()->count(),
                 'returned_today' => DailyLoan::whereDate('returned_at', Carbon::today())->count(),
                 'borrowed_today' => DailyLoan::whereDate('borrowed_at', Carbon::today())->count(),
                 'fine_unpaid' => $this->fine->totalUnpaid(),
@@ -343,6 +343,7 @@ class DailyLoanController extends Controller
             $validated['fine_notes'] ?? null,
             isset($validated['fine_paid_at']) ? Carbon::parse($validated['fine_paid_at']) : null,
         );
+
         return back()->with('success', "Pembayaran denda {$this->fine->format($amount)} berhasil dicatat.");
     }
 
@@ -382,7 +383,7 @@ class DailyLoanController extends Controller
      */
     public function printSlip(DailyLoan $dailyLoan)
     {
-        $loan = $this->slip->ensureLoanNumber($dailyLoan->load(['student.classroom', 'classroom', 'book']));
+        $loan = $this->slip->ensureLoanNumber($dailyLoan->load(['student.classroom', 'classroom', 'book', 'bookCopy']));
 
         return $this->inlinePdf('slips.loan', [
             'loan' => $loan,
@@ -390,6 +391,10 @@ class DailyLoanController extends Controller
             'book' => $loan->book,
             'classroomName' => $loan->effectiveClassroom()?->name ?? $loan->student?->classroom?->name,
             'slipNumber' => $loan->slip_number,
+            // Lama pinjam eksplisit supaya siswa tidak perlu menghitung sendiri.
+            'loanDays' => $loan->borrowed_at && $loan->due_at
+                ? (int) $loan->borrowed_at->diffInDays($loan->due_at)
+                : null,
         ], 'surat-peminjaman-'.($loan->slip_number ?: $loan->id));
     }
 
@@ -514,7 +519,7 @@ class DailyLoanController extends Controller
      * Query dasar rekap denda.
      *
      * @param  array<string, mixed>  $filters
-     * @return \Illuminate\Database\Eloquent\Builder<DailyLoan>
+     * @return Builder<DailyLoan>
      */
     private function fineQuery(string $status, array $filters)
     {
@@ -583,15 +588,13 @@ class DailyLoanController extends Controller
      * Query dasar daftar peminjaman yang dipakai halaman dan ekspor.
      *
      * @param  array<string, mixed>  $filters
-     * @return \Illuminate\Database\Eloquent\Builder<DailyLoan>
+     * @return Builder<DailyLoan>
      */
     private function filteredQuery(string $status, array $filters)
     {
         return DailyLoan::query()
             ->when($status === 'aktif', fn ($query) => $query->active())
-            ->when($status === 'terlambat', fn ($query) => $query
-                ->active()
-                ->whereDate('due_at', '<', Carbon::today()))
+            ->when($status === 'terlambat', fn ($query) => $query->overdue())
             ->when($status === 'kembali', fn ($query) => $query->where('status', DailyLoan::STATUS_KEMBALI))
             ->when($status === 'hilang', fn ($query) => $query->where('status', DailyLoan::STATUS_HILANG))
             ->when($filters['search'] ?? null, function ($query, $search) {

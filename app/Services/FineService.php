@@ -119,15 +119,24 @@ class FineService
      * Inilah yang membuat "jatuh tempo Jumat, kembali Senin" berdenda nol:
      * batasnya jadi hari Senin, bukan Jumat. Buku baru dianggap terlambat
      * setelah hari sekolah berikutnya benar-benar terlewat.
+     *
+     * Tanggal jatuh tempo yang sendirinya bukan hari sekolah (Sabtu, Minggu,
+     * atau libur nasional) juga digeser ke hari sekolah pertama sesudahnya,
+     * karena perpustakaan tutup pada hari itu.
      */
     public function effectiveDeadline(Carbon $dueAt): Carbon
     {
         $deadline = $dueAt->copy()->startOfDay();
+
+        // Batas 60 hari sebagai pengaman bila daftar libur salah konfigurasi.
+        for ($i = 0; $i < 60 && ! $this->isSchoolDay($deadline); $i++) {
+            $deadline->addDay();
+        }
+
+        // Kalau hari setelah tenggat bukan hari sekolah, geser ke hari
+        // sekolah pertama sesudah blok libur/akhir pekan itu.
         $next = $deadline->copy()->addDay();
 
-        // Kalau besoknya bukan hari sekolah, geser terus sampai ketemu
-        // hari sekolah berikutnya. Batas 60 hari sebagai pengaman bila
-        // daftar libur salah konfigurasi.
         if (! $this->isSchoolDay($next)) {
             for ($i = 0; $i < 60; $i++) {
                 if ($this->isSchoolDay($next)) {
@@ -169,6 +178,30 @@ class FineService
     }
 
     /**
+     * ID peminjaman aktif yang benar-benar terlambat menurut hari sekolah.
+     *
+     * Query SQL hanya dipakai sebagai penyaring awal (due_at sebelum tanggal
+     * acuan) karena tenggat efektif dan daftar libur tidak bisa dihitung
+     * murni di SQLite. Penyaringan akhir tetap memakai daysLate(), sehingga
+     * angka di filter, dashboard, dan halaman lain selalu sama.
+     *
+     * @return array<int, int>
+     */
+    public function overdueIds(?Carbon $reference = null): array
+    {
+        $reference ??= Carbon::today();
+
+        return DailyLoan::query()
+            ->active()
+            ->whereNotNull('due_at')
+            ->whereDate('due_at', '<', $reference->toDateString())
+            ->get(['id', 'due_at'])
+            ->filter(fn (DailyLoan $loan) => $this->daysLate($loan, $reference) > 0)
+            ->pluck('id')
+            ->all();
+    }
+
+    /**
      * Denda untuk satu peminjaman.
      */
     public function calculate(DailyLoan $loan, ?Carbon $returnedAt = null): int
@@ -196,13 +229,6 @@ class FineService
             'fine_amount' => $this->calculate($loan, $reference),
             'fine_days_late' => $this->daysLate($loan, $reference),
         ])->save();
-
-        // Kuitansi tagihan terbit otomatis begitu utang dendanya terbentuk.
-        // Siswa sering belum punya uang hari itu juga, jadi kuitansi inilah
-        // yang dibawa pulang untuk ditagih ke orang tua.
-        if ((int) $loan->fine_amount > 0) {
-            app(FineReceiptService::class)->issueForFine($loan, null, $reference);
-        }
 
         return $loan;
     }
@@ -244,7 +270,7 @@ class FineService
         $amount = $this->unpaidFor($student);
 
         return "Ada denda yang belum dibayar sebesar {$this->format($amount)}. "
-            .'Silakan melunasi di perpustakaan sebelum meminjaman buku lagi.';
+            .'Silakan melunasi di perpustakaan sebelum meminjam buku lagi.';
     }
 
     /**
@@ -259,12 +285,6 @@ class FineService
             'fine_received_by' => $receiver->id,
             'fine_notes' => $notes,
         ])->save();
-
-        // Kuitansi pelunasan terbit otomatis, sebagai bukti resmi bahwa
-        // denda untuk peminjaman ini sudah dibayar.
-        if ((int) $loan->fine_amount > 0) {
-            app(FineReceiptService::class)->issueForPayment($loan, $receiver, $paidOn);
-        }
 
         return $loan;
     }

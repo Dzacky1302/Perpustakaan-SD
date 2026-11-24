@@ -14,7 +14,7 @@ const FEATURES = [
         icon: Tv,
         title: 'Buku Tamu Digital',
         description:
-            'Kios layar sentuh: siswa memilih kelas dan namanya sendiri, kunjungan tercatat otomatis beserta keperluan dan waktu datang.',
+            'Portal siswa tanpa login: memilih kelas dan nama sendiri, lalu mengonfirmasi NISN. Kunjungan tercatat otomatis beserta keperluan dan waktu datang.',
     },
     {
         icon: LibraryBig,

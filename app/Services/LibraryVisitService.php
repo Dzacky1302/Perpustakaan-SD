@@ -13,14 +13,15 @@ use RuntimeException;
 /**
  * Pencatatan mandiri oleh siswa: buku tamu digital + peminjaman buku koleksi.
  *
- * Dipakai oleh Portal Siswa (public) dan halaman Kios (operasional petugas),
- * sehingga aturan-kuotanya hanya ada di satu tempat.
+ * Dipakai oleh Portal Siswa (public), sehingga aturan kuota, denda, dan
+ * pemilihan eksemplar fisik hanya ada di satu tempat.
  */
 class LibraryVisitService
 {
     public function __construct(
         private readonly BookStockService $stock,
         private readonly FineService $fine,
+        private readonly BookCopyService $copies,
     ) {}
 
     public function loanLimit(): int
@@ -96,10 +97,21 @@ class LibraryVisitService
             if ($borrowing) {
                 $borrowedAt = Carbon::today();
 
+                // Catat eksemplar fisiknya, bukan hanya judulnya, supaya
+                // barcode yang sama tidak bisa dipinjamkan dua kali.
+                $copy = $this->copies->allocate($book);
+
+                if (! $copy && $book->copies()->exists()) {
+                    throw new RuntimeException(
+                        "Tidak ada eksemplar \"{$book->title}\" yang tersedia untuk dipinjam."
+                    );
+                }
+
                 $loan = DailyLoan::create([
                     'student_id' => $student->id,
                     'classroom_id' => $student->classroom_id,
                     'book_id' => $book->id,
+                    'book_copy_id' => $copy?->id,
                     'borrowed_at' => $borrowedAt,
                     'due_at' => $borrowedAt->copy()->addDays($days),
                     'status' => DailyLoan::STATUS_DIPINJAM,

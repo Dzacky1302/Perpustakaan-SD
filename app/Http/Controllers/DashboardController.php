@@ -32,7 +32,7 @@ class DashboardController extends Controller
                 'visits_today' => LibraryVisit::whereDate('visit_date', $today)->count(),
                 'visits_month' => LibraryVisit::whereBetween('visit_date', [$startOfMonth, $today])->count(),
                 'loans_active' => DailyLoan::active()->count(),
-                'loans_overdue' => DailyLoan::active()->whereDate('due_at', '<', $today)->count(),
+                'loans_overdue' => DailyLoan::overdue()->count(),
                 'package_loans_active' => PackageLoan::active()->count(),
             ],
             'visitsTrend' => $this->visitsTrend(),
@@ -151,8 +151,7 @@ class DashboardController extends Controller
     private function overdueLoans(): array
     {
         return DailyLoan::with(['student.classroom', 'book'])
-            ->active()
-            ->whereDate('due_at', '<', Carbon::today())
+            ->overdue()
             ->orderBy('due_at')
             ->limit(10)
             ->get()
@@ -162,7 +161,7 @@ class DashboardController extends Controller
                 'classroom' => $loan->student?->classroom?->name,
                 'book' => $loan->book?->title,
                 'due_at' => $loan->due_at?->translatedFormat('d M Y'),
-                'days_late' => $loan->due_at ? (int) $loan->due_at->diffInDays(Carbon::today()) : 0,
+                'days_late' => $loan->daysLate(),
             ])
             ->all();
     }

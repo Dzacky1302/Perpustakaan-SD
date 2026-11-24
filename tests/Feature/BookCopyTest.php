@@ -326,6 +326,114 @@ class BookCopyTest extends TestCase
     }
 
     // ------------------------------------------------------------------
+    // Portal siswa
+    // ------------------------------------------------------------------
+
+    public function test_peminjaman_portal_mencatat_eksemplar_fisik(): void
+    {
+        $this->post('/peminjaman', [
+            'student_name' => $this->student->name,
+            'nisn' => $this->student->nisn,
+            'purpose' => 'pinjam',
+            'book_id' => $this->book->id,
+        ])->assertSessionHas('success');
+
+        $loan = DailyLoan::first();
+
+        $this->assertNotNull($loan->book_copy_id);
+        $this->assertSame($this->book->id, $loan->book_id);
+        $this->assertFalse($loan->bookCopy->isAvailable());
+    }
+
+    public function test_eksemplar_yang_dipinjam_portal_tidak_dipilih_lagi_oleh_petugas(): void
+    {
+        $this->post('/peminjaman', [
+            'student_name' => $this->student->name,
+            'nisn' => $this->student->nisn,
+            'purpose' => 'pinjam',
+            'book_id' => $this->book->id,
+        ])->assertSessionHas('success');
+
+        $portalCopy = DailyLoan::first()->book_copy_id;
+        $other = $this->newStudent('6666666666', 'Budi');
+
+        $this->actingAs($this->admin)->post('/loans', [
+            'student_id' => $other->id,
+            'book_id' => $this->book->id,
+        ])->assertSessionHas('success');
+
+        $this->assertNotSame(
+            $portalCopy,
+            DailyLoan::latest('id')->first()->book_copy_id,
+            'Eksemplar yang sudah dipinjam portal tidak boleh dipilih lagi.'
+        );
+    }
+
+    public function test_portal_tetap_bisa_meminjam_buku_tanpa_eksemplar(): void
+    {
+        $legacy = Book::create([
+            'code' => 'BK-0003',
+            'title' => 'Buku Lama',
+            'category_id' => $this->book->category_id,
+            'book_type' => 'koleksi',
+            'total_copies' => 2,
+            'available_copies' => 2,
+        ]);
+
+        $this->post('/peminjaman', [
+            'student_name' => $this->student->name,
+            'nisn' => $this->student->nisn,
+            'purpose' => 'pinjam',
+            'book_id' => $legacy->id,
+        ])->assertSessionHas('success');
+
+        $loan = DailyLoan::where('book_id', $legacy->id)->first();
+
+        $this->assertNotNull($loan);
+        $this->assertNull($loan->book_copy_id);
+    }
+
+    public function test_portal_ditolak_saat_semua_eksemplar_sedang_dipinjam(): void
+    {
+        $book = Book::create([
+            'code' => 'BK-0004',
+            'title' => 'Habis Dipinjam',
+            'category_id' => $this->book->category_id,
+            'book_type' => 'koleksi',
+            'total_copies' => 1,
+            'available_copies' => 1,
+        ]);
+
+        app(BookCopyService::class)->ensureCopies($book, 1);
+
+        $holder = $this->newStudent('7777777777', 'Citra');
+
+        DailyLoan::create([
+            'student_id' => $holder->id,
+            'classroom_id' => $holder->classroom_id,
+            'book_id' => $book->id,
+            'book_copy_id' => $book->copies()->first()->id,
+            'borrowed_at' => Carbon::today()->subDay(),
+            'due_at' => Carbon::today()->addDays(6),
+            'status' => DailyLoan::STATUS_DIPINJAM,
+        ]);
+
+        // Stok ringkasan sengaja dibiarkan 1 (belum disinkronkan) supaya
+        // yang diuji adalah penjagaan "semua eksemplar dipinjam", bukan
+        // pengecekan stok biasa.
+        $borrower = $this->newStudent('8888888888', 'Dewi');
+
+        $this->post('/peminjaman', [
+            'student_name' => $borrower->name,
+            'nisn' => $borrower->nisn,
+            'purpose' => 'pinjam',
+            'book_id' => $book->id,
+        ])->assertSessionHas('error');
+
+        $this->assertSame(1, DailyLoan::where('book_id', $book->id)->count());
+    }
+
+    // ------------------------------------------------------------------
     // Stok
     // ------------------------------------------------------------------
 

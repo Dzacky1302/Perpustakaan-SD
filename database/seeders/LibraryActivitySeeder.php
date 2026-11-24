@@ -7,6 +7,7 @@ use App\Models\DailyLoan;
 use App\Models\LibraryVisit;
 use App\Models\PackageLoan;
 use App\Models\Student;
+use App\Services\BookCopyService;
 use App\Services\BookStockService;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
@@ -21,6 +22,14 @@ class LibraryActivitySeeder extends Seeder
     {
         $students = Student::with('classroom')->get();
         $collectionBooks = Book::where('book_type', 'koleksi')->get();
+
+        // Data demo dibuat punya eksemplar fisik supaya pelacakan barcode
+        // dan peminjaman portal bisa langsung dicoba.
+        $copies = app(BookCopyService::class);
+
+        foreach ($collectionBooks as $book) {
+            $copies->ensureCopies($book, $book->total_copies);
+        }
 
         $this->seedVisits($students, $collectionBooks);
         $this->seedDailyLoans($students, $collectionBooks);
@@ -72,6 +81,7 @@ class LibraryActivitySeeder extends Seeder
     private function seedDailyLoans($students, $books): void
     {
         $stock = app(BookStockService::class);
+        $copies = app(BookCopyService::class);
         $libraryOpened = Carbon::today()->subDays(120);
 
         foreach (range(1, 90) as $ignore) {
@@ -94,9 +104,21 @@ class LibraryActivitySeeder extends Seeder
                 continue;
             }
 
+            // Pinjaman aktif harus memakai eksemplar yang masih tersedia.
+            // Pinjaman lama boleh menunjuk eksemplar mana pun karena sudah
+            // kembali dan bisa dipinjam lagi di kemudian hari.
+            $copy = $status === DailyLoan::STATUS_DIPINJAM
+                ? $copies->allocate($book)
+                : $book->copies()->orderBy('id')->first();
+
+            if ($status === DailyLoan::STATUS_DIPINJAM && ! $copy) {
+                continue;
+            }
+
             DailyLoan::create([
                 'student_id' => $student->id,
                 'book_id' => $book->id,
+                'book_copy_id' => $copy?->id,
                 'borrowed_at' => $borrowedAt,
                 'due_at' => $dueAt,
                 'returned_at' => $status === DailyLoan::STATUS_KEMBALI

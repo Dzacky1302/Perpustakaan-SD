@@ -80,7 +80,7 @@
 
     @unless (empty($verificationCode))
         <div class="kode">
-            <div class="judul-kode">Kode Verifikasi Kuitansi</div>
+            <div class="judul-kode">{{ $verificationLabel ?? 'Kode Verifikasi Kuitansi' }}</div>
             <div class="isi-kode">{{ $verificationCode }}</div>
         </div>
     @endunless

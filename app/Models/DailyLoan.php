@@ -109,6 +109,19 @@ class DailyLoan extends Model
     }
 
     /**
+     * Peminjaman aktif yang benar-benar terlambat menurut hari sekolah.
+     *
+     * Daftar ID diambil dari FineService supaya halaman, filter, dan
+     * dashboard memakai angka yang sama. whereIn dipilih agar paginate,
+     * pencarian, dan filter tanggal tetap bisa dipasang setelah scope ini.
+     */
+    public function scopeOverdue(Builder $query): Builder
+    {
+        return $query->active()
+            ->whereIn('id', app(FineService::class)->overdueIds());
+    }
+
+    /**
      * Peminjaman yang sudah melewati batas pengembalian.
      *
      * Memakai hitungan HARI SEKOLAH, jadi buku yang jatuh tempo Jumat

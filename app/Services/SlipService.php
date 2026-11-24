@@ -7,8 +7,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
 /**
- * Nomor slip cetak untuk surat peminjaman, surat pengembalian,
- * dan kuitansi pembayaran denda.
+ * Nomor slip cetak untuk surat peminjaman dan surat pengembalian.
  *
  * Format: SP/2026/03/0007  (prefix/tahun/bulan/urut hari ini)
  * Nomor dihitung dari jumlah slip yang sudah keluar pada hari yang
