@@ -8,7 +8,7 @@ export default function Pagination({ meta, links = [], className = '' }) {
 
     return (
         <div className={cn('flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 px-5 py-3', className)}>
-            <p className="text-[11px] text-slate-500">
+            <p className="text-xs text-slate-500">
                 Menampilkan <strong className="text-slate-700">{meta.from ?? 0}</strong>–
                 <strong className="text-slate-700">{meta.to ?? 0}</strong> dari{' '}
                 <strong className="text-slate-700">{meta.total}</strong> data
@@ -21,7 +21,7 @@ export default function Pagination({ meta, links = [], className = '' }) {
                         href={link.url ?? '#'}
                         preserveScroll
                         className={cn(
-                            'rounded-lg px-3 py-1.5 text-[11px] font-semibold transition',
+                            'rounded-lg px-3 py-1.5 text-xs font-semibold transition',
                             link.active
                                 ? 'bg-emerald-600 text-white'
                                 : link.url

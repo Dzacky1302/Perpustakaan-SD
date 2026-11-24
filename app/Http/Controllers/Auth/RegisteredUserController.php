@@ -47,6 +47,8 @@ class RegisteredUserController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            // Registrasi hanya boleh lewat admin/petugas manual
+            // role default diset ke kepsek (tidak bisa menulis data)
             'role' => User::ROLE_KEPSEK,
         ]);
 

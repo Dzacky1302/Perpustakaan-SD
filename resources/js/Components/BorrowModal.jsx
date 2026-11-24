@@ -115,13 +115,13 @@ export default function BorrowModal({ show, onClose, students = [], loanDays = 7
                             Scan barcode, atau ketik ISBN, kode buku, atau judul.
                         </p>
                     </div>
-                    <button type="button" onClick={onClose} className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100">
+                    <button type="button" onClick={onClose} className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100">
                         <X className="h-4 w-4" />
                     </button>
                 </div>
                 <Field label="Buku" error={form.errors.book_id || form.errors.book_query}>
                     <div className="relative">
-                        <ScanLine className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+                        <ScanLine className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-slate-500" />
                         <Input
                             value={form.data.book_query}
                             onChange={(event) => searchBooks(event.target.value)}
@@ -129,7 +129,7 @@ export default function BorrowModal({ show, onClose, students = [], loanDays = 7
                             className="pl-9"
                             autoComplete="off"
                         />
-                        {searching && <Loader2 className="absolute right-3 top-2.5 h-4 w-4 animate-spin text-slate-400" />}
+                        {searching && <Loader2 className="absolute right-3 top-2.5 h-4 w-4 animate-spin text-slate-500" />}
                     </div>
 
                     {bookResults.length > 0 && (
@@ -159,7 +159,7 @@ export default function BorrowModal({ show, onClose, students = [], loanDays = 7
                                             {book.available_copies > 0 ? `Tersedia ${book.available_copies}` : 'Kosong'}
                                         </span>
                                         {book.accession_number && (
-                                            <span className="block text-[10px] text-slate-400">{book.accession_number}</span>
+                                            <span className="block text-xs text-slate-500">{book.accession_number}</span>
                                         )}
                                     </span>
                                 </button>

@@ -2,9 +2,15 @@
     'title' => 'Surat Peminjaman Buku',
     'signatureLeft' => 'Pustakawan',
     'signatureRight' => 'Kepala Sekolah',
+    'verificationLabel' => 'Nomor Slip (diketik saat pengembalian)',
+    'verificationCode' => $slipNumber ?? null,
 ])
 
 @section('content')
+    @php
+        $copy = $loan->bookCopy ?? null;
+    @endphp
+
     <table class="data">
         <tr>
             <th>Nama Siswa</th>
@@ -23,12 +29,30 @@
             <td>{{ $book?->code ?? '-' }}</td>
         </tr>
         <tr>
+            <th>No. Registrasi</th>
+            <td>{{ $copy?->accession_number ?? 'Belum dicatat' }}</td>
+        </tr>
+        <tr>
+            <th>Barcode Eksemplar</th>
+            <td>{{ $copy?->barcode ?? 'Belum ditempel' }}</td>
+        </tr>
+        <tr>
             <th>Tanggal Pinjam</th>
             <td>{{ $loan->borrowed_at?->translatedFormat('d F Y') }}</td>
         </tr>
         <tr>
             <th>Jatuh Tempo</th>
             <td>{{ $loan->due_at?->translatedFormat('d F Y') }}</td>
+        </tr>
+        <tr>
+            <th>Lama Pinjam</th>
+            <td>
+                @if ($loanDays !== null)
+                    {{ $loanDays }} hari
+                @else
+                    -
+                @endif
+            </td>
         </tr>
     </table>
 

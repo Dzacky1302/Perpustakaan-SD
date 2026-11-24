@@ -1,3 +1,4 @@
+import { academicYear } from '@/constants/academic';
 import { Head, Link, usePage } from '@inertiajs/react';
 import {
     ArrowRight,
@@ -14,7 +15,7 @@ const FEATURES = [
         icon: Tv,
         title: 'Buku Tamu Digital',
         description:
-            'Kios layar sentuh: siswa memilih kelas dan namanya sendiri, kunjungan tercatat otomatis beserta keperluan dan waktu datang.',
+            'Portal siswa tanpa login: memilih kelas dan nama sendiri, lalu mengonfirmasi NISN. Kunjungan tercatat otomatis beserta keperluan dan waktu datang.',
     },
     {
         icon: LibraryBig,
@@ -52,9 +53,9 @@ export default function Welcome({ canLogin, canRegister, appName }) {
                             </span>
                             <span className="leading-tight">
                                 <span className="block text-lg font-extrabold tracking-tight text-slate-900">
-                                    Pustaka<span className="text-emerald-600">SD</span>
+                                    Pustaka<span className="text-emerald-700">SD</span>
                                 </span>
-                                <span className="block text-[11px] text-slate-500">
+                                <span className="block text-xs text-slate-500">
                                     {school?.name ?? appName}
                                 </span>
                             </span>
@@ -72,7 +73,7 @@ export default function Welcome({ canLogin, canRegister, appName }) {
                             {canRegister && (
                                 <Link
                                     href={route('register')}
-                                    className="rounded-lg bg-emerald-600 px-3.5 py-2 text-xs font-bold text-white transition hover:bg-emerald-700"
+                                    className="rounded-lg bg-emerald-700 px-3.5 py-2 text-xs font-bold text-white transition hover:bg-emerald-800"
                                 >
                                     Daftar
                                 </Link>
@@ -83,9 +84,9 @@ export default function Welcome({ canLogin, canRegister, appName }) {
                 <section className="mx-auto max-w-6xl px-4 py-14 sm:px-6 lg:px-8">
                     <div className="grid items-center gap-10 lg:grid-cols-2">
                         <div>
-                            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[11px] font-bold text-emerald-700">
+                            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
                                 <ShieldCheck className="h-3.5 w-3.5" />
-                                Tahun Ajaran {school?.academic_year ?? '2025/2026'}
+                                Tahun Ajaran {school?.academic_year ?? academicYear()}
                             </span>
                             <h1 className="mt-4 text-3xl font-extrabold leading-tight tracking-tight text-slate-900 sm:text-4xl">
                                 Kelola perpustakaan sekolah dasar tanpa buku besar manual
@@ -100,7 +101,7 @@ export default function Welcome({ canLogin, canRegister, appName }) {
                             <div className="mt-6 flex flex-wrap items-center gap-3">
                                 <Link
                                     href={route('peminjaman.index')}
-                                    className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-bold text-white transition hover:bg-emerald-700"
+                                    className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-700 px-5 py-2.5 text-sm font-bold text-white transition hover:bg-emerald-800"
                                 >
                                     Masuk sebagai Siswa
                                     <ArrowRight className="h-4 w-4" />
@@ -115,22 +116,22 @@ export default function Welcome({ canLogin, canRegister, appName }) {
 
                             <dl className="mt-8 grid grid-cols-3 gap-4 border-t border-slate-200 pt-6">
                                 <div>
-                                    <dt className="text-[11px] font-bold uppercase text-slate-500">Kelas</dt>
+                                    <dt className="text-xs font-bold uppercase text-slate-500">Kelas</dt>
                                     <dd className="text-lg font-extrabold text-slate-900">Kelas 1 – 6</dd>
                                 </div>
                                 <div>
-                                    <dt className="text-[11px] font-bold uppercase text-slate-500">Koleksi</dt>
+                                    <dt className="text-xs font-bold uppercase text-slate-500">Koleksi</dt>
                                     <dd className="text-lg font-extrabold text-slate-900">Paket &amp; Bacaan</dd>
                                 </div>
                                 <div>
-                                    <dt className="text-[11px] font-bold uppercase text-slate-500">Laporan</dt>
+                                    <dt className="text-xs font-bold uppercase text-slate-500">Laporan</dt>
                                     <dd className="text-lg font-extrabold text-slate-900">PDF &amp; Excel</dd>
                                 </div>
                             </dl>
                         </div>
 
                         <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-                            <p className="text-[11px] font-bold uppercase tracking-wide text-slate-500">
+                            <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
                                 Identitas Perpustakaan
                             </p>
                             <div className="mt-4 space-y-3 text-xs">
@@ -146,7 +147,7 @@ export default function Welcome({ canLogin, canRegister, appName }) {
                                 </div>
                                 <div className="grid grid-cols-2 gap-3">
                                     <div className="rounded-xl bg-slate-50 px-4 py-3">
-                                        <p className="text-[10px] font-bold uppercase text-slate-500">
+                                        <p className="text-xs font-bold uppercase text-slate-500">
                                             Kepala Sekolah
                                         </p>
                                         <p className="mt-0.5 font-bold text-slate-800">
@@ -154,7 +155,7 @@ export default function Welcome({ canLogin, canRegister, appName }) {
                                         </p>
                                     </div>
                                     <div className="rounded-xl bg-slate-50 px-4 py-3">
-                                        <p className="text-[10px] font-bold uppercase text-slate-500">Pustakawan</p>
+                                        <p className="text-xs font-bold uppercase text-slate-500">Pustakawan</p>
                                         <p className="mt-0.5 font-bold text-slate-800">
                                             {school?.librarian ?? '-'}
                                         </p>
@@ -182,13 +183,11 @@ export default function Welcome({ canLogin, canRegister, appName }) {
                                         key={feature.title}
                                         className="rounded-2xl border border-slate-200 p-5 transition hover:border-emerald-300 hover:shadow-sm"
                                     >
-                                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
-                                            <Icon className="h-5 w-5" />
-                                        </span>
-                                        <h3 className="mt-3 text-sm font-extrabold text-slate-900">
+                                        <h3 className="flex items-center gap-2 text-sm font-extrabold text-slate-900">
+                                            <Icon className="h-4 w-4 shrink-0 text-emerald-700" aria-hidden="true" />
                                             {feature.title}
                                         </h3>
-                                        <p className="mt-1.5 text-xs leading-relaxed text-slate-500">
+                                        <p className="mt-1.5 text-xs leading-relaxed text-slate-600 text-pretty">
                                             {feature.description}
                                         </p>
                                     </div>
@@ -199,7 +198,7 @@ export default function Welcome({ canLogin, canRegister, appName }) {
                 </section>
 
                 <footer className="border-t border-slate-200 bg-slate-50 py-6">
-                    <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-2 px-4 text-[11px] text-slate-500 sm:flex-row sm:px-6 lg:px-8">
+                    <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-2 px-4 text-xs text-slate-500 sm:flex-row sm:px-6 lg:px-8">
                         <p>
                             © {new Date().getFullYear()} {appName} — {school?.name ?? 'Perpustakaan Sekolah Dasar'}
                         </p>

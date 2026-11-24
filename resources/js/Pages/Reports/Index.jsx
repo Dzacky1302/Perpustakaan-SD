@@ -1,13 +1,16 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Badge, Card, Field, Input, PageHeader, Select } from '@/Components/ui';
+import { Badge, Card, Field, Input, PageHeader, Select, StatCard } from '@/Components/ui';
 import { Head, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import {
     Banknote,
     BookMarked,
+    BookOpen,
     CalendarRange,
+    CheckCircle2,
     FileSpreadsheet,
     FileText,
+    Info,
     LibraryBig,
     Users,
 } from 'lucide-react';
@@ -102,24 +105,39 @@ export default function ReportsIndex({ filters = {}, classrooms = [], academicYe
         >
             <Head title="Laporan" />
             <div className="mb-4 grid grid-cols-2 gap-4 lg:grid-cols-4">
-                <div className="rounded-2xl border border-rose-200 bg-rose-50/60 p-4">
-                    <p className="text-[11px] font-bold uppercase text-rose-700">Denda Belum Dibayar</p>
-                    <p className="mt-1 text-xl font-extrabold text-rose-700">{fines.unpaid_label ?? 'Rp0'}</p>
-                    <p className="mt-1 text-[11px] text-rose-600">{fines.count_unpaid ?? 0} buku</p>
-                </div>
-                <div className="rounded-2xl border border-emerald-200 bg-emerald-50/60 p-4">
-                    <p className="text-[11px] font-bold uppercase text-emerald-700">Denda Diterima</p>
-                    <p className="mt-1 text-xl font-extrabold text-emerald-700">{fines.collected_label ?? 'Rp0'}</p>
-                </div>
-                <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                    <p className="text-[11px] font-bold uppercase text-slate-500">Tarif Denda</p>
-                    <p className="mt-1 text-xl font-extrabold text-slate-900">{fines.rate_label ?? 'Rp500'}</p>
-                    <p className="mt-1 text-[11px] text-slate-500">per hari sekolah</p>
-                </div>
-                <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                    <p className="text-[11px] font-bold uppercase text-slate-500">Batas per Buku</p>
-                    <p className="mt-1 text-xl font-extrabold text-slate-900">{fines.max_label ?? 'Rp10.000'}</p>
-                </div>
+                <StatCard
+                    label="Denda Belum Dibayar"
+                    value={fines.unpaid_label ?? 'Rp0'}
+                    valueSize="text-lg sm:text-xl"
+                    hint={`${fines.count_unpaid ?? 0} buku`}
+                    icon={Banknote}
+                    tone="rose"
+                    valueTone="rose"
+                />
+                <StatCard
+                    label="Denda Diterima"
+                    value={fines.collected_label ?? 'Rp0'}
+                    valueSize="text-lg sm:text-xl"
+                    icon={CheckCircle2}
+                    tone="emerald"
+                    valueTone="emerald"
+                />
+                <StatCard
+                    label="Tarif Denda"
+                    value={fines.rate_label ?? 'Rp500'}
+                    valueSize="text-lg sm:text-xl"
+                    hint="Per hari sekolah"
+                    icon={Info}
+                    tone="slate"
+                />
+                <StatCard
+                    label="Batas per Buku"
+                    value={fines.max_label ?? 'Rp10.000'}
+                    valueSize="text-lg sm:text-xl"
+                    hint="Maksimum tiap buku"
+                    icon={BookOpen}
+                    tone="slate"
+                />
             </div>
             <Card
                 className="mb-4"
@@ -181,22 +199,10 @@ export default function ReportsIndex({ filters = {}, classrooms = [], academicYe
             </Card>
 
             <div className="mb-4 grid grid-cols-2 gap-4 lg:grid-cols-4">
-                <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                    <p className="text-[11px] font-bold uppercase text-slate-500">Kunjungan Periode Ini</p>
-                    <p className="mt-1 text-xl font-extrabold text-emerald-700">{preview.visits ?? 0}</p>
-                </div>
-                <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                    <p className="text-[11px] font-bold uppercase text-slate-500">Peminjaman Aktif</p>
-                    <p className="mt-1 text-xl font-extrabold text-amber-600">{preview.active_loans ?? 0}</p>
-                </div>
-                <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                    <p className="text-[11px] font-bold uppercase text-slate-500">Buku Paket Beredar</p>
-                    <p className="mt-1 text-xl font-extrabold text-violet-700">{preview.package_loans ?? 0}</p>
-                </div>
-                <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                    <p className="text-[11px] font-bold uppercase text-slate-500">Anggota Aktif</p>
-                    <p className="mt-1 text-xl font-extrabold text-slate-900">{preview.students ?? 0}</p>
-                </div>
+                <StatCard label="Kunjungan Periode Ini" value={preview.visits ?? 0} icon={CalendarRange} tone="emerald" valueTone="emerald" />
+                <StatCard label="Peminjaman Aktif" value={preview.active_loans ?? 0} icon={BookMarked} tone="amber" valueTone="amber" />
+                <StatCard label="Buku Paket Beredar" value={preview.package_loans ?? 0} icon={LibraryBig} tone="violet" valueTone="violet" />
+                <StatCard label="Anggota Aktif" value={preview.students ?? 0} icon={Users} tone="slate" />
             </div>
             <div className="grid gap-4 lg:grid-cols-3">
                 {REPORTS.map((report) => {

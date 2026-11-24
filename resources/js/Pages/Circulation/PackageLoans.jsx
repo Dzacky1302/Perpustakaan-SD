@@ -1,6 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Modal from '@/Components/Modal';
-import { Badge, Button, Card, EmptyState, Field, Input, PageHeader, Select, cn } from '@/Components/ui';
+import { Badge, Button, Card, EmptyState, Field, Input, PageHeader, Select, StatCard, cn } from '@/Components/ui';
 import { Head, router, useForm } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import { CanManage } from '@/hooks/useCanManage';
@@ -188,7 +188,7 @@ export default function PackageLoansIndex({
                         />
                     </Field>
                     <div className="flex items-end gap-2 lg:col-span-4">
-                        <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-[11px]">
+                        <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs">
                             <p className="font-bold text-slate-600">Wali Kelas</p>
                             <p className="text-slate-500">{selected?.homeroom_teacher ?? '-'}</p>
                         </div>
@@ -212,17 +212,21 @@ export default function PackageLoansIndex({
 
             <div className="mb-4 grid grid-cols-2 gap-4 lg:grid-cols-6">
                 {[
-                    { label: 'Siswa', value: summary?.students ?? 0, tone: 'text-slate-900' },
-                    { label: 'Judul Paket', value: summary?.books ?? 0, tone: 'text-slate-900' },
-                    { label: 'Sudah Dibagikan', value: summary?.distributed ?? 0, tone: 'text-sky-700' },
-                    { label: 'Masih Dipegang', value: summary?.active ?? 0, tone: 'text-amber-600' },
-                    { label: 'Sudah Kembali', value: summary?.returned ?? 0, tone: 'text-emerald-700' },
-                    { label: 'Hilang', value: summary?.lost ?? 0, tone: 'text-rose-700' },
+                    { label: 'Siswa', value: summary?.students ?? 0, tone: 'slate', valueTone: 'slate', icon: Users },
+                    { label: 'Judul Paket', value: summary?.books ?? 0, tone: 'slate', valueTone: 'slate', icon: Layers },
+                    { label: 'Sudah Dibagikan', value: summary?.distributed ?? 0, tone: 'sky', valueTone: 'sky', icon: Send },
+                    { label: 'Masih Dipegang', value: summary?.active ?? 0, tone: 'amber', valueTone: 'amber', icon: ClipboardCheck },
+                    { label: 'Sudah Kembali', value: summary?.returned ?? 0, tone: 'emerald', valueTone: 'emerald', icon: CheckCircle2 },
+                    { label: 'Hilang', value: summary?.lost ?? 0, tone: 'rose', valueTone: 'rose', icon: TriangleAlert },
                 ].map((item) => (
-                    <div key={item.label} className="rounded-2xl border border-slate-200 bg-white p-4">
-                        <p className="text-[10px] font-bold uppercase text-slate-500">{item.label}</p>
-                        <p className={cn('mt-1 text-xl font-extrabold', item.tone)}>{item.value}</p>
-                    </div>
+                    <StatCard
+                        key={item.label}
+                        label={item.label}
+                        value={item.value}
+                        icon={item.icon}
+                        tone={item.tone}
+                        valueTone={item.valueTone}
+                    />
                 ))}
             </div>
 
@@ -265,26 +269,26 @@ export default function PackageLoansIndex({
                         />
                     </div>
                 ) : (
-                    <div className="max-h-[70vh] overflow-auto">
+                    <div role="region" aria-label="Tabel pinjaman paket" tabIndex={0} className="max-h-[70vh] overflow-auto">
                         <table className="min-w-full border-separate border-spacing-0 text-left text-xs">
                             <thead>
                                 <tr>
-                                    <th className="sticky left-0 top-0 z-20 min-w-[220px] border-b border-slate-200 bg-slate-50 px-5 py-3 text-[10px] font-bold uppercase tracking-wide text-slate-500">
+                                    <th className="sticky left-0 top-0 z-20 min-w-[220px] border-b border-slate-200 bg-slate-50 px-5 py-3 text-xs font-bold uppercase tracking-wide text-slate-500">
                                         Nama Siswa
                                     </th>
                                     {books.map((book) => (
                                         <th
                                             key={book.id}
-                                            className="sticky top-0 z-10 min-w-[130px] border-b border-l border-slate-200 bg-slate-50 px-3 py-3 text-center text-[10px] font-bold leading-tight text-slate-500"
+                                            className="sticky top-0 z-10 min-w-[130px] border-b border-l border-slate-200 bg-slate-50 px-3 py-3 text-center text-xs font-bold leading-tight text-slate-500"
                                             title={book.title}
                                         >
                                             <span className="block truncate">{book.title}</span>
-                                            <span className="font-mono text-[9px] text-slate-400">
+                                            <span className="font-mono text-xs text-slate-500">
                                                 {book.code}
                                             </span>
                                         </th>
                                     ))}
-                                    <th className="sticky right-0 top-0 z-20 min-w-[110px] border-b border-l border-slate-200 bg-slate-50 px-3 py-3 text-center text-[10px] font-bold uppercase tracking-wide text-slate-500">
+                                    <th className="sticky right-0 top-0 z-20 min-w-[110px] border-b border-l border-slate-200 bg-slate-50 px-3 py-3 text-center text-xs font-bold uppercase tracking-wide text-slate-500">
                                         Ringkasan
                                     </th>
                                 </tr>
@@ -294,7 +298,7 @@ export default function PackageLoansIndex({
                                     <tr key={row.student_id} className="hover:bg-slate-50/60">
                                         <td className="sticky left-0 z-10 border-b border-slate-100 bg-white px-5 py-3">
                                             <p className="font-bold text-slate-800">{row.name}</p>
-                                            <p className="font-mono text-[10px] text-slate-400">{row.nisn}</p>
+                                            <p className="font-mono text-xs text-slate-500">{row.nisn}</p>
                                         </td>
                                         {row.cells.map((cell) => {
                                             const selectedCell =
@@ -316,7 +320,7 @@ export default function PackageLoansIndex({
                                                                 : (cell.status ?? 'Belum dibagikan')
                                                         }
                                                         className={cn(
-                                                            'mx-auto flex h-9 w-full items-center justify-center rounded-lg border text-[10px] font-bold transition',
+                                                            'mx-auto flex h-9 w-full items-center justify-center rounded-lg border text-xs font-bold transition',
                                                             cell.status === 'dipinjam' &&
                                                                 (selectedCell
                                                                     ? 'border-emerald-500 bg-emerald-500 text-white'
@@ -337,7 +341,7 @@ export default function PackageLoansIndex({
                                                         {!cell.status && '—'}
                                                     </button>
                                                     {cell.status === 'kembali' && cell.returned_at && (
-                                                        <p className="mt-1 text-[9px] text-slate-400">
+                                                        <p className="mt-1 text-xs text-slate-500">
                                                             {cell.returned_at}
                                                         </p>
                                                     )}
@@ -376,14 +380,14 @@ export default function PackageLoansIndex({
                             <h3 className="text-sm font-extrabold text-slate-900">
                                 Distribusi Buku Paket Kelas {selected?.name}
                             </h3>
-                            <p className="text-[11px] text-slate-500">
+                            <p className="text-xs text-slate-500">
                                 Sistem membagikan buku ke seluruh siswa aktif kelas ini sekaligus.
                             </p>
                         </div>
                         <button
                             type="button"
                             onClick={() => setShowDistribute(false)}
-                            className="rounded-md p-1.5 text-slate-400 hover:bg-slate-100"
+                            className="rounded-md p-1.5 text-slate-500 hover:bg-slate-100"
                         >
                             <X className="h-4 w-4" />
                         </button>
@@ -411,7 +415,7 @@ export default function PackageLoansIndex({
                         </div>
 
                         <div>
-                            <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-slate-500">
+                            <p className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-500">
                                 Buku yang dibagikan ({distributeForm.data.book_ids.length} dari {books.length}{' '}
                                 judul)
                             </p>
@@ -443,7 +447,7 @@ export default function PackageLoansIndex({
                                                 <span className="block truncate font-bold text-slate-700">
                                                     {book.title}
                                                 </span>
-                                                <span className="font-mono text-[10px] text-slate-400">
+                                                <span className="font-mono text-xs text-slate-500">
                                                     {book.code}
                                                 </span>
                                             </span>
@@ -472,14 +476,14 @@ export default function PackageLoansIndex({
                             <h3 className="text-sm font-extrabold text-slate-900">
                                 Checklist Pengembalian Buku Paket
                             </h3>
-                            <p className="text-[11px] text-slate-500">
+                            <p className="text-xs text-slate-500">
                                 {returnForm.data.loan_ids.length} buku siap diproses
                             </p>
                         </div>
                         <button
                             type="button"
                             onClick={() => setShowReturn(false)}
-                            className="rounded-md p-1.5 text-slate-400 hover:bg-slate-100"
+                            className="rounded-md p-1.5 text-slate-500 hover:bg-slate-100"
                         >
                             <X className="h-4 w-4" />
                         </button>
@@ -492,13 +496,13 @@ export default function PackageLoansIndex({
                                 .map((cell) => (
                                     <li
                                         key={cell.loan_id}
-                                        className="flex items-center justify-between gap-3 px-4 py-2.5 text-[11px]"
+                                        className="flex items-center justify-between gap-3 px-4 py-2.5 text-xs"
                                     >
                                         <span className="min-w-0">
                                             <span className="block font-bold text-slate-700">
                                                 {cell.student}
                                             </span>
-                                            <span className="text-slate-400">NISN {cell.nisn}</span>
+                                            <span className="text-slate-500">NISN {cell.nisn}</span>
                                         </span>
                                         <span className="shrink-0 text-slate-500">
                                             ID Paket #{cell.loan_id}
@@ -541,7 +545,7 @@ export default function PackageLoansIndex({
                             </Field>
                         </div>
 
-                        <p className="rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-[11px] text-sky-900">
+                        <p className="rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-xs text-sky-900">
                             Buku yang dikembalikan akan menambah stok tersedia otomatis. Buku yang ditandai hilang
                             tidak mengembalikan stok dan tercatat sebagai temuan inventaris.
                         </p>

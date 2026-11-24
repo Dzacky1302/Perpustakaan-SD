@@ -13,14 +13,11 @@ use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
 /**
- * Slip cetak: surat peminjaman, surat pengembalian, dan kuitansi denda.
+ * Slip cetak: surat peminjaman dan surat pengembalian.
  *
  * Setiap slip hanya boleh dicetak pada kondisi yang benar. Surat pengembalian
- * menunggu buku benar-benar kembali, kuitansi menunggu dendanya dikunci —
- * supaya arsip kertas tidak pernah berisi angka yang masih berubah.
- *
- * Kuitansi tagihan memang dicetak sebelum dibayar: itulah gunanya, dibawa
- * pulang untuk ditunjukkan kepada orang tua.
+ * menunggu buku benar-benar kembali — supaya arsip kertas tidak pernah
+ * berisi angka yang masih berubah.
  */
 class SlipTest extends TestCase
 {
@@ -89,6 +86,31 @@ class SlipTest extends TestCase
         $this->assertNotNull($this->loan->fresh()->slip_number);
     }
 
+    public function test_surat_peminjaman_memuat_durasi_dan_eksemplar(): void
+    {
+        $loan = $this->loan->fresh();
+        $copy = $loan->book->copies()->first();
+
+        if ($copy) {
+            $loan->forceFill(['book_copy_id' => $copy->id])->save();
+        }
+
+        $html = view('slips.loan', [
+            'loan' => $loan->fresh()->load(['student', 'book', 'bookCopy']),
+            'student' => $loan->student,
+            'book' => $loan->book,
+            'classroomName' => $loan->effectiveClassroom()?->name,
+            'slipNumber' => $loan->fresh()->slip_number ?? 'SP/2026/03/0001',
+            'loanDays' => 9,
+        ])->render();
+
+        $this->assertStringContainsString('Lama Pinjam', $html);
+        $this->assertStringContainsString('9 hari', $html);
+        $this->assertStringContainsString('No. Registrasi', $html);
+        $this->assertStringContainsString('Barcode Eksemplar', $html);
+        $this->assertStringContainsString('Nomor Slip (diketik saat pengembalian)', $html);
+    }
+
     public function test_nomor_slip_tetap_sama_saat_dicetak_ulang(): void
     {
         $this->actingAs($this->admin)->get("/loans/{$this->loan->id}/slip-pinjaman");
@@ -114,30 +136,15 @@ class SlipTest extends TestCase
         $this->assertNotNull($this->loan->fresh()->return_slip_number);
     }
 
-    public function test_kuitansi_tagihan_bisa_dicetak_sebelum_dibayar(): void
+    public function test_kuitansi_sudah_dihapus_total(): void
     {
-        // Tagihan justru dibuat untuk dibawa pulang sebelum bayar, jadi
-        // sudah final begitu dendanya dikunci pada saat pengembalian.
+        // Kuitansi denda dihapus total (Opsi B): arsip, verifikasi,
+        // maupun cetakan per peminjaman semuanya 404.
         $this->actingAs($this->admin)->patch("/loans/{$this->loan->id}/kembali");
 
-        $this->assertIsPdf($this->actingAs($this->admin)->get("/loans/{$this->loan->id}/slip-denda"));
-    }
-
-    public function test_kuitansi_ditolak_saat_buku_masih_dipinjam(): void
-    {
-        // Denda belum dikunci selama buku masih di tangan siswa, jadi
-        // nominal yang tercetak bisa berbeda dengan tagihan akhir.
-        $this->actingAs($this->admin)
-            ->get("/loans/{$this->loan->id}/slip-denda")
-            ->assertRedirect();
-    }
-
-    public function test_kuitansi_denda_ada_setelah_dibayar(): void
-    {
-        $this->actingAs($this->admin)->patch("/loans/{$this->loan->id}/kembali");
-        $this->actingAs($this->admin)->patch("/loans/{$this->loan->id}/denda");
-
-        $this->assertIsPdf($this->actingAs($this->admin)->get("/loans/{$this->loan->id}/slip-denda"));
+        $this->actingAs($this->admin)->get('/kuitansi-denda')->assertNotFound();
+        $this->actingAs($this->admin)->get('/kuitansi-denda/cek')->assertNotFound();
+        $this->actingAs($this->admin)->get("/loans/{$this->loan->id}/slip-denda")->assertNotFound();
     }
 
     public function test_kepsek_boleh_mencetak_slip(): void

@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 use App\Http\Controllers\BackupController;
 use App\Http\Controllers\BookController;
@@ -6,8 +6,6 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ClassroomController;
 use App\Http\Controllers\DailyLoanController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\FineReceiptController;
-use App\Http\Controllers\KioskController;
 use App\Http\Controllers\PackageLoanController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PromotionController;
@@ -29,25 +27,28 @@ Route::get('/', function () {
 |--------------------------------------------------------------------------
 | Portal siswa mandiri (public, tanpa login)
 |--------------------------------------------------------------------------
-| Digitalisasi buku tamu: pilih kelas -> pilih nama -> pilih keperluan ->
-| pilih buku. Tanggal dan jam dicatat otomatis oleh sistem.
+| Digitalisasi buku tamu: pilih kelas -> pilih nama -> ketik NISN ->
+| pilih keperluan -> pilih buku. Tanggal dan jam dicatat otomatis
+| oleh sistem.
+|
+| Ketiganya diberi throttle per IP: di sekolah semua perangkat keluar
+| lewat satu IP, jadi batasnya sengaja dibuat lebih longgar daripada
+| kebutuhan satu kelas, tetap menahan penyerang yang mengulang-ulang
+| percobaan.
 */
 Route::get('/peminjaman', [StudentPortalController::class, 'index'])->name('peminjaman.index');
-Route::get('/peminjaman/siswa', [StudentPortalController::class, 'students'])->name('peminjaman.students');
-Route::post('/peminjaman', [StudentPortalController::class, 'store'])->name('peminjaman.store');
+Route::get('/peminjaman/siswa', [StudentPortalController::class, 'students'])
+    ->middleware('throttle:120,1')
+    ->name('peminjaman.students');
+Route::post('/peminjaman/verifikasi', [StudentPortalController::class, 'verify'])
+    ->middleware('throttle:60,1')
+    ->name('peminjaman.verify');
+Route::post('/peminjaman', [StudentPortalController::class, 'store'])
+    ->middleware('throttle:120,1')
+    ->name('peminjaman.store');
 
 Route::middleware(['auth', 'verified', 'admin'])->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
-
-    /*
-    |--------------------------------------------------------------------------
-    | Buku tamu digital (mode kios)
-    |--------------------------------------------------------------------------
-    */
-    Route::get('/kios', [KioskController::class, 'index'])->name('kiosk.index');
-    Route::get('/kios/siswa', [KioskController::class, 'students'])->name('kiosk.students');
-    Route::post('/kios/kunjungan', [KioskController::class, 'checkIn'])->name('kiosk.check-in');
-    Route::delete('/kios/kunjungan/{visit}', [KioskController::class, 'destroy'])->name('kiosk.destroy');
 
     /*
     |--------------------------------------------------------------------------
@@ -93,20 +94,9 @@ Route::middleware(['auth', 'verified', 'admin'])->group(function () {
     Route::patch('/loans/{dailyLoan}/hilang', [DailyLoanController::class, 'lost'])->name('loans.lost');
     Route::get('/loans/{dailyLoan}/slip-pinjaman', [DailyLoanController::class, 'printSlip'])->name('loans.slip');
     Route::get('/loans/{dailyLoan}/slip-kembali', [DailyLoanController::class, 'printReturnSlip'])->name('loans.slip-return');
-    Route::get('/loans/{dailyLoan}/slip-denda', [FineReceiptController::class, 'print'])->name('loans.slip-fine');
     Route::resource('loans', DailyLoanController::class)
         ->except(['create', 'show', 'edit'])
         ->parameters(['loans' => 'dailyLoan']);
-
-    /*
-    |--------------------------------------------------------------------------
-    | Kuitansi denda: arsip cetak & pengecekan kode verifikasi
-    |--------------------------------------------------------------------------
-    | Kuitansi terbit otomatis (tagihan saat buku kembali, pelunasan saat
-    | dibayar), jadi halaman ini hanya memeriksa dan mencetak ulang.
-    */
-    Route::get('/kuitansi-denda', [FineReceiptController::class, 'index'])->name('receipts.index');
-    Route::get('/kuitansi-denda/cek', [FineReceiptController::class, 'verify'])->name('receipts.verify');
 
     /*
     |--------------------------------------------------------------------------
@@ -160,3 +150,4 @@ Route::middleware(['auth', 'verified', 'admin'])->group(function () {
 });
 
 require __DIR__.'/auth.php';
+

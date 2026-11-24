@@ -1,9 +1,9 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Modal from '@/Components/Modal';
-import { Badge, Button, Card, EmptyState, Field, Input, PageHeader, cn } from '@/Components/ui';
+import { Badge, Button, Card, EmptyState, Field, Input, PageHeader, StatCard, cn } from '@/Components/ui';
 import { Head, router, useForm } from '@inertiajs/react';
 import { useState } from 'react';
-import { Palette, Pencil, Plus, Tag, Trash2, X } from 'lucide-react';
+import { BookOpen, Library, Palette, Pencil, Plus, Tag, Trash2, X } from 'lucide-react';
 import { CanManage } from '@/hooks/useCanManage';
 
 const EMPTY = { code: '', name: '', color: 'sky' };
@@ -83,20 +83,15 @@ export default function CategoriesIndex({ categories = [], colors = [], totalBoo
             <Head title="Kategori" />
 
             <div className="mb-4 grid grid-cols-2 gap-4 sm:grid-cols-3">
-                <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                    <p className="text-[11px] font-bold uppercase text-slate-500">Jumlah Kategori</p>
-                    <p className="mt-1 text-xl font-extrabold text-slate-900">{categories.length}</p>
-                </div>
-                <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                    <p className="text-[11px] font-bold uppercase text-slate-500">Judul Terdaftar</p>
-                    <p className="mt-1 text-xl font-extrabold text-emerald-700">{totalBooks}</p>
-                </div>
-                <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                    <p className="text-[11px] font-bold uppercase text-slate-500">Total Eksemplar</p>
-                    <p className="mt-1 text-xl font-extrabold text-amber-600">
-                        {categories.reduce((total, item) => total + item.copies_sum, 0)}
-                    </p>
-                </div>
+                <StatCard label="Jumlah Kategori" value={categories.length} icon={Tag} tone="slate" />
+                <StatCard label="Judul Terdaftar" value={totalBooks} icon={BookOpen} tone="emerald" valueTone="emerald" />
+                <StatCard
+                    label="Total Eksemplar"
+                    value={categories.reduce((total, item) => total + item.copies_sum, 0)}
+                    icon={Library}
+                    tone="amber"
+                    valueTone="amber"
+                />
             </div>
             <Card bodyClass="p-0">
                 {categories.length === 0 ? (
@@ -116,9 +111,9 @@ export default function CategoriesIndex({ categories = [], colors = [], totalBoo
                         />
                     </div>
                 ) : (
-                    <div className="w-full overflow-x-auto">
+                    <div role="region" aria-label="Tabel kategori" tabIndex={0} className="w-full overflow-x-auto">
                         <table className="w-full text-left text-xs">
-                            <thead className="bg-slate-50 text-[10px] uppercase tracking-wide text-slate-500">
+                            <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
                                 <tr>
                                     <th className="px-4 py-2.5 font-bold">Kode</th>
                                     <th className="px-3 py-2.5 font-bold">Nama Kategori</th>
@@ -131,7 +126,7 @@ export default function CategoriesIndex({ categories = [], colors = [], totalBoo
                             <tbody className="divide-y divide-slate-100">
                                 {categories.map((category) => (
                                     <tr key={category.id} className="hover:bg-slate-50/70">
-                                        <td className="px-4 py-2.5 font-mono text-[11px] font-bold text-slate-500">
+                                        <td className="px-4 py-2.5 font-mono text-xs font-bold text-slate-500">
                                             {category.code}
                                         </td>
                                         <td className="px-3 py-2.5">
@@ -158,7 +153,7 @@ export default function CategoriesIndex({ categories = [], colors = [], totalBoo
                                                     <button
                                                         type="button"
                                                         onClick={() => openEdit(category)}
-                                                        className="rounded-md p-1.5 text-slate-400 transition hover:bg-sky-50 hover:text-sky-600"
+                                                        className="rounded-md p-1.5 text-slate-500 transition hover:bg-sky-50 hover:text-sky-600"
                                                         title="Ubah kategori"
                                                     >
                                                         <Pencil className="h-4 w-4" />
@@ -166,7 +161,7 @@ export default function CategoriesIndex({ categories = [], colors = [], totalBoo
                                                     <button
                                                         type="button"
                                                         onClick={() => remove(category)}
-                                                        className="rounded-md p-1.5 text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
+                                                        className="rounded-md p-1.5 text-slate-500 transition hover:bg-rose-50 hover:text-rose-600"
                                                         title="Hapus kategori"
                                                     >
                                                         <Trash2 className="h-4 w-4" />
@@ -190,7 +185,7 @@ export default function CategoriesIndex({ categories = [], colors = [], totalBoo
                         <button
                             type="button"
                             onClick={closeModal}
-                            className="rounded-md p-1.5 text-slate-400 hover:bg-slate-100"
+                            className="rounded-md p-1.5 text-slate-500 hover:bg-slate-100"
                         >
                             <X className="h-4 w-4" />
                         </button>
@@ -217,7 +212,7 @@ export default function CategoriesIndex({ categories = [], colors = [], totalBoo
                         </Field>
                         <Field label="Warna Label" error={form.errors.color}>
                             <div className="mt-1 flex flex-wrap items-center gap-2">
-                                <Palette className="h-4 w-4 text-slate-400" />
+                                <Palette className="h-4 w-4 text-slate-500" />
                                 {colors.map((color) => (
                                     <button
                                         key={color}
@@ -236,7 +231,7 @@ export default function CategoriesIndex({ categories = [], colors = [], totalBoo
                             </div>
                         </Field>
                         <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-                            <p className="text-[11px] font-bold uppercase text-slate-500">Pratinjau Label</p>
+                            <p className="text-xs font-bold uppercase text-slate-500">Pratinjau Label</p>
                             <Badge tone={form.data.color} className="mt-2">
                                 {form.data.name || 'Nama kategori'}
                             </Badge>

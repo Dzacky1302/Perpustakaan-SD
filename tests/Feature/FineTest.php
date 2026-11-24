@@ -155,11 +155,13 @@ class FineTest extends TestCase
 
     public function test_denda_dibatasi_maksimal_sepuluh_ribu(): void
     {
-        // Terlambat 39 hari kerja: 39 x 500 = Rp19.500, kena plafon.
+        // Jatuh tempo 1 Juni 2026 bertepatan dengan libur Hari Lahir
+        // Pancasila, sehingga tenggat efektif bergeser ke Selasa 2 Juni.
+        // Terlambat 38 hari kerja: 38 x 500 = Rp19.000, kena plafon.
         $loan = $this->dueOn('2026-06-01');
         $loan->update(['returned_at' => Carbon::parse('2026-07-27')]);
 
-        $this->assertSame(39, app(FineService::class)->daysLate($loan));
+        $this->assertSame(38, app(FineService::class)->daysLate($loan));
         $this->assertSame(10000, app(FineService::class)->calculate($loan));
     }
 

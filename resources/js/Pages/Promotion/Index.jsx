@@ -99,9 +99,9 @@ export default function PromotionIndex({ plan, graduated = [] }) {
                 title="Rencana Perpindahan Siswa"
                 subtitle="Cek dulu sebelum dijalankan"
             >
-                <div className="w-full overflow-x-auto">
+                <div role="region" aria-label="Tabel kenaikan kelas" tabIndex={0} className="w-full overflow-x-auto">
                     <table className="w-full text-left text-xs">
-                        <thead className="bg-slate-50 text-[10px] uppercase tracking-wide text-slate-500">
+                        <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
                             <tr>
                                 <th className="px-5 py-3 font-bold">Kelas</th>
                                 <th className="px-3 py-3 font-bold">Wali Kelas</th>
@@ -131,14 +131,14 @@ export default function PromotionIndex({ plan, graduated = [] }) {
                                     </td>
                                     <td className="px-5 py-3 text-slate-600">
                                         {row.action === 'lulus' ? (
-                                            <span className="text-slate-400">
+                                            <span className="text-slate-500">
                                                 {row.target}
                                             </span>
                                         ) : (
                                             <span className="inline-flex items-center gap-1.5 font-semibold text-emerald-700">
                                                 <ArrowRight className="h-3.5 w-3.5" />
                                                 {row.target}
-                                                <span className="text-[10px] font-normal text-slate-400">
+                                                <span className="text-xs font-normal text-slate-500">
                                                     (T.A. baru)
                                                 </span>
                                             </span>
@@ -176,7 +176,7 @@ export default function PromotionIndex({ plan, graduated = [] }) {
                                     <p className="truncate text-xs font-bold text-slate-800">
                                         {student.name}
                                     </p>
-                                    <p className="truncate text-[11px] text-slate-500">
+                                    <p className="truncate text-xs text-slate-500">
                                         NISN {student.nisn} • {student.classroom}
                                     </p>
                                 </div>
@@ -196,7 +196,7 @@ export default function PromotionIndex({ plan, graduated = [] }) {
                         <button
                             type="button"
                             onClick={closeModal}
-                            className="rounded-md p-1.5 text-slate-400 hover:bg-slate-100"
+                            className="rounded-md p-1.5 text-slate-500 hover:bg-slate-100"
                         >
                             <X className="h-4 w-4" />
                         </button>

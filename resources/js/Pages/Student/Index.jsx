@@ -1,5 +1,6 @@
 import StudentLayout from '@/Layouts/StudentLayout';
 import { Badge, Button, Card, EmptyState, Input, cn } from '@/Components/ui';
+import { VISIT_PURPOSES } from '@/constants/visits';
 import { Head, useForm, usePage } from '@inertiajs/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -14,14 +15,14 @@ import {
     UserRound,
 } from 'lucide-react';
 
-const STEPS = ['Kelas', 'Nama', 'Keperluan', 'Buku'];
+const STEPS = ['Kelas', 'Nama', 'NISN', 'Tujuan', 'Buku'];
 
 const LOAN_OPTIONS = [3, 7, 14, 30];
 
-const PURPOSES = [
-    { value: 'membaca', label: 'Membaca di Tempat', description: 'Buku tetap di perpustakaan', icon: BookOpen },
-    { value: 'pinjam', label: 'Meminjam Buku', description: 'Bawa pulang ke rumah', icon: SmilePlus },
-];
+const PURPOSES = VISIT_PURPOSES.map((purpose) => ({
+    ...purpose,
+    icon: purpose.value === 'membaca' ? BookOpen : SmilePlus,
+}));
 
 export default function StudentPortalIndex({
     classrooms = [],
@@ -37,10 +38,13 @@ export default function StudentPortalIndex({
     const [loadingStudents, setLoadingStudents] = useState(false);
     const [search, setSearch] = useState('');
     const [bookSearch, setBookSearch] = useState('');
+    const [nisnError, setNisnError] = useState('');
+    const [checkingNisn, setCheckingNisn] = useState(false);
     const searchRef = useRef(null);
 
-    const { data, setData, post, processing, reset } = useForm({
-        student_id: '',
+    const { data, setData, post, processing, reset, errors, clearErrors } = useForm({
+        student_name: '',
+        nisn: '',
         purpose: '',
         book_id: '',
         loan_days: String(loanDays),
@@ -81,11 +85,7 @@ export default function StudentPortalIndex({
         const keyword = search.trim().toLowerCase();
         if (!keyword) return students;
 
-        return students.filter(
-            (item) =>
-                item.name.toLowerCase().includes(keyword) ||
-                (item.nisn ?? '').toLowerCase().includes(keyword),
-        );
+        return students.filter((item) => item.name.toLowerCase().includes(keyword));
     }, [students, search]);
 
     const availableBooks = useMemo(() => {
@@ -108,7 +108,48 @@ export default function StudentPortalIndex({
         setStudent(null);
         setSearch('');
         setBookSearch('');
+        setNisnError('');
+        setCheckingNisn(false);
         reset();
+    };
+
+    /**
+     * Cocokkan nama yang dipilih dengan NISN yang diketik siswa.
+     *
+     * Verifikasi dilakukan sebelum lanjut ke langkah keperluan, supaya
+     * kalau NISN salah siswa tidak perlu mengisi seluruh formulir dulu.
+     * Backend tetap memeriksa ulang saat data disimpan.
+     */
+    const verifyNisn = (event) => {
+        event.preventDefault();
+
+        const nisn = String(data.nisn ?? '').replace(/\D/g, '');
+
+        if (nisn.length !== 10) {
+            setNisnError('NISN harus terdiri dari 10 angka.');
+            return;
+        }
+
+        setNisnError('');
+        setCheckingNisn(true);
+
+        axios
+            .post(route('peminjaman.verify'), {
+                student_name: student?.name ?? '',
+                nisn,
+            })
+            .then(() => {
+                setData('nisn', nisn);
+                setStep(4);
+            })
+            .catch((error) => {
+                setNisnError(
+                    error.response?.data?.errors?.nisn?.[0] ??
+                        error.response?.data?.message ??
+                        'NISN tidak cocok dengan nama yang dipilih. Periksa kembali.',
+                );
+            })
+            .finally(() => setCheckingNisn(false));
     };
 
     const submit = (event) => {
@@ -116,7 +157,18 @@ export default function StudentPortalIndex({
 
         post(route('peminjaman.store'), {
             preserveScroll: true,
-            onSuccess: () => setStep(5),
+            onSuccess: (page) => {
+                // Kegagalan aturan bisnis (kuota, denda, stok) dikirim
+                // sebagai flash error, bukan validation error. Jangan
+                // tampilkan layar sukses untuk kasus itu.
+                setStep(page.props.flash?.error ? 5 : 6);
+            },
+            onError: (formErrors) => {
+                if (formErrors.nisn) {
+                    setNisnError(formErrors.nisn);
+                    setStep(3);
+                }
+            },
         });
     };
 
@@ -133,42 +185,51 @@ export default function StudentPortalIndex({
                 </div>
             )}
 
-            {step <= 4 && (
+            {step <= 5 && (
                 <div className="mb-5 text-center">
                     <h1 className="text-2xl font-extrabold tracking-tight text-slate-900">
                         Buku Tamu Digital
                     </h1>
-                    <p className="mt-1 text-sm text-slate-500">
+                    <p className="mt-1 text-sm text-slate-600">
                         Pilih kelas, namamu, keperluan, dan buku yang kamu baca atau pinjam.
                     </p>
                 </div>
             )}
 
-            {step <= 4 && (
-                <ol className="mb-5 flex items-center justify-center gap-1.5">
-                    {STEPS.map((label, index) => {
-                        const number = index + 1;
-                        const active = step === number;
-                        const finished = step > number;
+            {step <= 5 && (
+                <nav aria-label="Langkah pengisian">
+                    <ol className="mb-5 flex items-center justify-center gap-1.5">
+                        {STEPS.map((label, index) => {
+                            const number = index + 1;
+                            const active = step === number;
+                            const finished = step > number;
 
-                        return (
-                            <li key={label} className="flex items-center gap-1.5">
+                            return (
+                                <li
+                                    key={label}
+                                    aria-current={active ? 'step' : undefined}
+                                    className="flex items-center gap-1.5"
+                                >
                                 <span
                                     className={cn(
                                         'flex h-8 w-8 items-center justify-center rounded-full text-xs font-extrabold',
                                         finished
-                                            ? 'bg-emerald-500 text-white'
+                                            ? 'bg-emerald-800 text-white'
                                             : active
-                                              ? 'bg-emerald-600 text-white'
-                                              : 'bg-slate-200 text-slate-500',
+                                              ? 'bg-emerald-800 text-white'
+                                              : 'bg-slate-200 text-slate-700',
                                     )}
                                 >
-                                    {finished ? <CheckCircle2 className="h-4 w-4" /> : number}
+                                    {finished ? (
+                                        <CheckCircle2 className="h-4 w-4" strokeWidth={3} aria-hidden="true" />
+                                    ) : (
+                                        number
+                                    )}
                                 </span>
                                 <span
                                     className={cn(
-                                        'hidden text-[11px] font-bold sm:block',
-                                        active ? 'text-slate-800' : 'text-slate-400',
+                                        'hidden text-xs font-bold sm:block',
+                                        active ? 'text-slate-900' : 'text-slate-600',
                                     )}
                                 >
                                     {label}
@@ -184,10 +245,11 @@ export default function StudentPortalIndex({
                             </li>
                         );
                     })}
-                </ol>
+                    </ol>
+                </nav>
             )}
 
-            {step === 5 && (
+            {step === 6 && (
                 <Card className="mx-auto max-w-xl">
                     <div className="flex flex-col items-center py-6 text-center">
                         <span className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50">
@@ -249,7 +311,7 @@ export default function StudentPortalIndex({
                                 <span className="block text-xl font-extrabold text-slate-800">
                                     {item.name}
                                 </span>
-                                <span className="mt-0.5 block text-[11px] text-slate-500">
+                                <span className="mt-0.5 block text-xs text-slate-500">
                                     {item.students_count} siswa
                                 </span>
                             </button>
@@ -271,16 +333,22 @@ export default function StudentPortalIndex({
                         </Button>
                     </div>
 
-                    <div className="relative mb-3">
-                        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                    <search className="relative mb-3">
+                        <Search
+                            aria-hidden="true"
+                            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500"
+                        />
                         <Input
                             ref={searchRef}
+                            type="search"
+                            aria-label="Cari nama siswa"
+                            enterKeyHint="search"
                             value={search}
                             onChange={(event) => setSearch(event.target.value)}
-                            placeholder="Ketik nama atau NISN..."
+                            placeholder="Ketik nama..."
                             className="py-3 pl-9"
                         />
-                    </div>
+                    </search>
 
                     {loadingStudents ? (
                         <p className="py-6 text-center text-xs text-slate-500">
@@ -300,16 +368,16 @@ export default function StudentPortalIndex({
                                     type="button"
                                     onClick={() => {
                                         setStudent(item);
-                                        setData('student_id', item.id);
+                                        setData('student_name', item.name);
+                                        setData('nisn', '');
+                                        setNisnError('');
+                                        clearErrors('nisn');
                                         setStep(3);
                                     }}
                                     className="rounded-xl border border-slate-200 bg-white px-3 py-3 text-left transition hover:border-emerald-400 hover:bg-emerald-50"
                                 >
                                     <span className="block truncate text-sm font-bold text-slate-800">
                                         {item.name}
-                                    </span>
-                                    <span className="text-[10px] text-slate-500">
-                                        NISN {item.nisn}
                                     </span>
                                     {item.active_loans > 0 && (
                                         <Badge tone="amber" className="mt-1.5">
@@ -328,16 +396,104 @@ export default function StudentPortalIndex({
                 <Card>
                     <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
                         <div>
-                            <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-700">
-                                Siswa terpilih
+                            <p className="text-xs font-bold uppercase tracking-wide text-emerald-700">
+                                Nama yang dipilih
                             </p>
                             <p className="text-sm font-extrabold text-slate-900">{student?.name}</p>
-                            <p className="text-[11px] text-slate-600">
-                                NISN {student?.nisn} • Kelas {classroom?.name} • sisa kuota{' '}
-                                {borrowQuota} dari {loanLimit}
+                            <p className="text-xs text-slate-600">
+                                Kelas {classroom?.name} • sisa kuota {borrowQuota} dari {loanLimit}
                             </p>
                         </div>
                         <Button variant="secondary" type="button" onClick={() => setStep(2)}>
+                            Ganti Siswa
+                        </Button>
+                    </div>
+
+                    <form onSubmit={verifyNisn}>
+                        <label
+                            htmlFor="portal-nisn"
+                            className="mb-1 block text-xs font-bold uppercase tracking-wide text-slate-500"
+                        >
+                            Masukkan NISN untuk verifikasi
+                        </label>
+                        <p id="portal-nisn-help" className="mb-3 text-xs text-slate-500">
+                            Ketik 10 angka NISN milikmu. NISN harus cocok dengan nama yang
+                            dipilih, supaya data yang tercatat benar-benar milik siswa ini.
+                        </p>
+
+                        <Input
+                            id="portal-nisn"
+                            name="nisn"
+                            value={data.nisn}
+                            onChange={(event) => {
+                                setData(
+                                    'nisn',
+                                    event.target.value.replace(/\D/g, '').slice(0, 10),
+                                );
+                                // Pesan galat browser dibersihkan begitu pengguna
+                                // mengetik lagi, sesuai aturan validasi native.
+                                event.target.setCustomValidity('');
+                                setNisnError('');
+                                clearErrors('nisn');
+                            }}
+                            onInvalid={(event) =>
+                                event.target.setCustomValidity('NISN harus terdiri dari 10 angka.')
+                            }
+                            invalid={Boolean(nisnError || errors.nisn)}
+                            aria-describedby={`portal-nisn-help${
+                                nisnError || errors.nisn ? ' portal-nisn-error' : ''
+                            }`}
+                            required
+                            pattern="[0-9]{10}"
+                            inputMode="numeric"
+                            autoComplete="off"
+                            autoCorrect="off"
+                            autoCapitalize="none"
+                            spellCheck={false}
+                            enterKeyHint="go"
+                            maxLength={10}
+                            autoFocus
+                            placeholder="Contoh: 1234567890"
+                            className="py-3 text-center text-lg font-bold tracking-[0.35em] tabular-nums"
+                        />
+
+                        {(nisnError || errors.nisn) && (
+                            <p
+                                id="portal-nisn-error"
+                                role="alert"
+                                className="mt-2 text-xs font-semibold text-rose-700"
+                            >
+                                {nisnError || errors.nisn}
+                            </p>
+                        )}
+
+                        <div className="mt-4 flex justify-end">
+                            <Button
+                                type="submit"
+                                className="px-5 py-3 text-sm"
+                                disabled={checkingNisn || String(data.nisn).length !== 10}
+                            >
+                                <CheckCircle2 className="h-4 w-4" />
+                                {checkingNisn ? 'Memeriksa...' : 'Verifikasi & Lanjut'}
+                            </Button>
+                        </div>
+                    </form>
+                </Card>
+            )}
+
+            {step === 4 && (
+                <Card>
+                    <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                        <div>
+                            <p className="text-xs font-bold uppercase tracking-wide text-slate-600">
+                                {student?.name} • {classroom?.name}
+                            </p>
+                            <p className="mt-0.5 flex items-center gap-1.5 text-xs font-semibold text-emerald-700">
+                                <CheckCircle2 className="h-3.5 w-3.5" />
+                                NISN cocok
+                            </p>
+                        </div>
+                        <Button variant="secondary" type="button" onClick={() => setStep(3)}>
                             Ganti Siswa
                         </Button>
                     </div>
@@ -355,7 +511,7 @@ export default function StudentPortalIndex({
                                     type="button"
                                     onClick={() => {
                                         setData({ ...data, purpose: item.value, book_id: '' });
-                                        setStep(4);
+                                        setStep(5);
                                     }}
                                     className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-5 text-left transition hover:border-emerald-400 hover:bg-emerald-50"
                                 >
@@ -366,7 +522,7 @@ export default function StudentPortalIndex({
                                         <span className="block text-base font-extrabold text-slate-800">
                                             {item.label}
                                         </span>
-                                        <span className="block text-[11px] text-slate-500">
+                                        <span className="block text-xs text-slate-500">
                                             {item.description}
                                         </span>
                                     </span>
@@ -378,12 +534,12 @@ export default function StudentPortalIndex({
             )}
 
 
-            {step === 4 && (
+            {step === 5 && (
                 <form onSubmit={submit}>
                     <Card>
                         <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
                             <div>
-                                <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">
+                                <p className="text-xs font-bold uppercase tracking-wide text-slate-600">
                                     {student?.name} • {classroom?.name}
                                 </p>
                                 <p className="text-sm font-extrabold text-slate-900">
@@ -391,26 +547,32 @@ export default function StudentPortalIndex({
                                         ? 'Pilih buku yang mau dipinjam'
                                         : 'Pilih buku yang mau dibaca'}
                                 </p>
-                                <p className="text-[11px] text-slate-500">
+                                <p className="text-xs text-slate-600">
                                     {data.purpose === 'pinjam'
                                         ? `Pinjaman ${data.loan_days || loanDays} hari. Sisa kuota ${borrowQuota} dari ${loanLimit}.`
                                         : 'Buku tetap di perpustakaan, boleh dikosongkan.'}
                                 </p>
                             </div>
-                            <Button variant="secondary" type="button" onClick={() => setStep(3)}>
+                            <Button variant="secondary" type="button" onClick={() => setStep(4)}>
                                 Ganti Keperluan
                             </Button>
                         </div>
 
-                        <div className="relative mb-3">
-                            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                        <search className="relative mb-3">
+                            <Search
+                                aria-hidden="true"
+                                className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500"
+                            />
                             <Input
+                                type="search"
+                                aria-label="Cari judul atau penulis buku"
+                                enterKeyHint="search"
                                 value={bookSearch}
                                 onChange={(event) => setBookSearch(event.target.value)}
                                 placeholder="Ketik judul atau penulis..."
                                 className="py-3 pl-9"
                             />
-                        </div>
+                        </search>
 
 
 
@@ -442,7 +604,7 @@ export default function StudentPortalIndex({
                                             <span className="block text-sm font-bold text-slate-800">
                                                 {book.title}
                                             </span>
-                                            <span className="block text-[11px] text-slate-500">
+                                            <span className="block text-xs text-slate-500">
                                                 {book.author}
                                             </span>
                                             <span className="mt-1.5 flex flex-wrap gap-1.5">
@@ -471,7 +633,7 @@ export default function StudentPortalIndex({
                         <div className="mt-4 grid gap-3 sm:grid-cols-2">
                             {data.purpose === 'pinjam' && (
                                 <div>
-                                    <p className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-600">
+                                    <p className="mb-1 block text-xs font-bold uppercase tracking-wide text-slate-600">
                                         Lama Pinjam
                                     </p>
                                     <div className="grid grid-cols-4 gap-2">
@@ -492,7 +654,7 @@ export default function StudentPortalIndex({
                                                 <span className="block text-sm font-extrabold text-slate-800">
                                                     {days}
                                                 </span>
-                                                <span className="text-[10px] text-slate-500">hari</span>
+                                                <span className="text-xs text-slate-600">hari</span>
                                             </button>
                                         ))}
                                     </div>
@@ -500,7 +662,7 @@ export default function StudentPortalIndex({
                             )}
 
                             <div>
-                                <p className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-600">
+                                <p className="mb-1 block text-xs font-bold uppercase tracking-wide text-slate-600">
                                     Catatan (opsional)
                                 </p>
                                 <Input

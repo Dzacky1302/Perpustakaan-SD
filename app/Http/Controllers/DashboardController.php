@@ -8,6 +8,8 @@ use App\Models\DailyLoan;
 use App\Models\LibraryVisit;
 use App\Models\PackageLoan;
 use App\Models\Student;
+use App\Services\BackupService;
+use App\Services\FineService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -16,13 +18,24 @@ use Inertia\Response;
 
 class DashboardController extends Controller
 {
+    public function __construct(
+        private readonly FineService $fine,
+        private readonly BackupService $backups,
+    ) {}
+
     /**
      * Ringkasan aktivitas perpustakaan untuk pustakawan dan kepala sekolah.
+     *
+     * Semua angka uang diambil dari FineService yang sama dengan halaman
+     * Denda dan Laporan, supaya layar pertama hari kerja tidak pernah
+     * menampilkan nominal yang berbeda dengan sumbernya.
      */
     public function __invoke(Request $request): Response
     {
         $today = Carbon::today();
         $startOfMonth = $today->copy()->startOfMonth();
+        $backups = $this->backups->all();
+        $lastBackup = $backups[0] ?? null;
 
         return Inertia::render('Dashboard', [
             'stats' => [
@@ -32,9 +45,20 @@ class DashboardController extends Controller
                 'visits_today' => LibraryVisit::whereDate('visit_date', $today)->count(),
                 'visits_month' => LibraryVisit::whereBetween('visit_date', [$startOfMonth, $today])->count(),
                 'loans_active' => DailyLoan::active()->count(),
-                'loans_overdue' => DailyLoan::active()->whereDate('due_at', '<', $today)->count(),
+                'loans_overdue' => DailyLoan::overdue()->count(),
                 'package_loans_active' => PackageLoan::active()->count(),
+                'fine_unpaid' => $this->fine->totalUnpaid(),
+                'fine_unpaid_label' => $this->fine->format($this->fine->totalUnpaid()),
+                'students_blocked' => Student::whereIn(
+                    'id',
+                    DailyLoan::where('fine_amount', '>', 0)->whereNull('fine_paid_at')->distinct('student_id')->pluck('student_id')
+                )->count(),
             ],
+            'lastBackup' => $lastBackup ? [
+                'created_label' => $lastBackup['created_label'],
+                'filename' => $lastBackup['filename'],
+                'count' => count($backups),
+            ] : null,
             'visitsTrend' => $this->visitsTrend(),
             'topBooks' => $this->topBooks(),
             'visitsByClassroom' => $this->visitsByClassroom(),
@@ -82,7 +106,10 @@ class DashboardController extends Controller
     }
 
     /**
-     * Kunjungan 14 hari terakhir (Senin - Jumat).
+     * Kunjungan 14 hari terakhir.
+     *
+     * Tiap titik diberi penanda hari sekolah supaya grafik bisa menjelaskan
+     * bahwa Sabtu/Minggu dan libur tidak ikut menambah denda keterlambatan.
      */
     private function visitsTrend(): array
     {
@@ -102,6 +129,7 @@ class DashboardController extends Controller
                 'date' => $key,
                 'label' => $date->translatedFormat('d M'),
                 'total' => (int) ($rows[$key] ?? 0),
+                'school_day' => $this->fine->isSchoolDay($date),
             ];
         }
 
@@ -151,8 +179,7 @@ class DashboardController extends Controller
     private function overdueLoans(): array
     {
         return DailyLoan::with(['student.classroom', 'book'])
-            ->active()
-            ->whereDate('due_at', '<', Carbon::today())
+            ->overdue()
             ->orderBy('due_at')
             ->limit(10)
             ->get()
@@ -162,7 +189,8 @@ class DashboardController extends Controller
                 'classroom' => $loan->student?->classroom?->name,
                 'book' => $loan->book?->title,
                 'due_at' => $loan->due_at?->translatedFormat('d M Y'),
-                'days_late' => $loan->due_at ? (int) $loan->due_at->diffInDays(Carbon::today()) : 0,
+                'days_late' => $loan->daysLate(),
+                'fine_label' => $this->fine->format($loan->liveFine()),
             ])
             ->all();
     }

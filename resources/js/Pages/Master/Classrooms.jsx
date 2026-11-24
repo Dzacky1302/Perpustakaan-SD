@@ -1,6 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Modal from '@/Components/Modal';
-import { Button, Card, EmptyState, Field, Input, PageHeader, Select } from '@/Components/ui';
+import { Button, Card, EmptyState, Field, Input, PageHeader, Select, StatCard } from '@/Components/ui';
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 import { CanManage } from '@/hooks/useCanManage';
@@ -92,7 +92,7 @@ export default function ClassroomsIndex({
 
             {academicYears.length > 1 && (
                 <div className="mb-4 flex flex-wrap items-center gap-2">
-                    <span className="text-[11px] font-bold uppercase text-slate-500">
+                    <span className="text-xs font-bold uppercase text-slate-500">
                         Tahun Ajaran
                     </span>
                     {academicYears.map((year) => (
@@ -108,7 +108,7 @@ export default function ClassroomsIndex({
                         >
                             {year}
                             {String(year) === String(activeYear) && (
-                                <span className="ml-1.5 text-[10px] font-normal opacity-80">
+                                <span className="ml-1.5 text-xs font-normal opacity-80">
                                     (aktif)
                                 </span>
                             )}
@@ -125,18 +125,9 @@ export default function ClassroomsIndex({
             )}
 
             <div className="mb-4 grid grid-cols-2 gap-4 sm:grid-cols-3">
-                <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                    <p className="text-[11px] font-bold uppercase text-slate-500">Jumlah Kelas</p>
-                    <p className="mt-1 text-xl font-extrabold text-slate-900">{classrooms.length}</p>
-                </div>
-                <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                    <p className="text-[11px] font-bold uppercase text-slate-500">Total Siswa</p>
-                    <p className="mt-1 text-xl font-extrabold text-emerald-700">{totalStudents}</p>
-                </div>
-                <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                    <p className="text-[11px] font-bold uppercase text-slate-500">Tahun Ajaran</p>
-                    <p className="mt-1 text-xl font-extrabold text-sky-700">{academicYears.length} periode</p>
-                </div>
+                <StatCard label="Jumlah Kelas" value={classrooms.length} icon={GraduationCap} tone="slate" />
+                <StatCard label="Total Siswa" value={totalStudents} icon={UserRound} tone="emerald" valueTone="emerald" />
+                <StatCard label="Tahun Ajaran" value={`${academicYears.length} periode`} icon={Layers} tone="sky" valueTone="sky" />
             </div>
             <Card bodyClass="p-0">
                 {classrooms.length === 0 ? (
@@ -156,9 +147,9 @@ export default function ClassroomsIndex({
                         />
                     </div>
                 ) : (
-                    <div className="w-full overflow-x-auto">
+                    <div role="region" aria-label="Tabel kelas" tabIndex={0} className="w-full overflow-x-auto">
                         <table className="w-full text-left text-xs">
-                            <thead className="bg-slate-50 text-[10px] uppercase tracking-wide text-slate-500">
+                            <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
                                 <tr>
                                     <th className="px-4 py-2.5 font-bold">Kelas</th>
                                     <th className="px-3 py-2.5 font-bold">Tahun Ajaran</th>
@@ -179,7 +170,7 @@ export default function ClassroomsIndex({
                                         <td className="px-3 py-3 text-slate-600">{classroom.academic_year}</td>
                                         <td className="px-3 py-3">
                                             <span className="flex items-center gap-1.5 text-slate-600">
-                                                <UserRound className="h-3.5 w-3.5 text-slate-400" />
+                                                <UserRound className="h-3.5 w-3.5 text-slate-500" />
                                                 {classroom.homeroom_teacher ?? '-'}
                                             </span>
                                         </td>
@@ -192,7 +183,7 @@ export default function ClassroomsIndex({
                                                     <button
                                                         type="button"
                                                         onClick={() => openEdit(classroom)}
-                                                        className="rounded-md p-1.5 text-slate-400 transition hover:bg-sky-50 hover:text-sky-600"
+                                                        className="rounded-md p-1.5 text-slate-500 transition hover:bg-sky-50 hover:text-sky-600"
                                                         title="Ubah kelas"
                                                     >
                                                         <Pencil className="h-4 w-4" />
@@ -200,7 +191,7 @@ export default function ClassroomsIndex({
                                                     <button
                                                         type="button"
                                                         onClick={() => remove(classroom)}
-                                                        className="rounded-md p-1.5 text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
+                                                        className="rounded-md p-1.5 text-slate-500 transition hover:bg-rose-50 hover:text-rose-600"
                                                         title="Hapus kelas"
                                                     >
                                                         <Trash2 className="h-4 w-4" />
@@ -224,7 +215,7 @@ export default function ClassroomsIndex({
                         <button
                             type="button"
                             onClick={closeModal}
-                            className="rounded-md p-1.5 text-slate-400 hover:bg-slate-100"
+                            className="rounded-md p-1.5 text-slate-500 hover:bg-slate-100"
                         >
                             <X className="h-4 w-4" />
                         </button>
